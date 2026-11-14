@@ -1,0 +1,26 @@
+# Dependencies & build output
+node_modules/
+dist/
+coverage/
+
+# Environment (commit .env.example instead)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# Office temp/lock files
+~$*
+
+# Requirements spec kept out of the public repo
+project architecture.docx
