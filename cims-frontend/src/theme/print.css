@@ -1,0 +1,14 @@
+/* Global print rules: hide app chrome, keep only the printable report. */
+@media print {
+  .no-print,
+  header.MuiAppBar-root,
+  nav.cims-nav,
+  footer.cims-footer {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
