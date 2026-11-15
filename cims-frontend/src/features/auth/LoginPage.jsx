@@ -37,8 +37,8 @@ export default function LoginPage() {
   });
 
   return (
-    <Box sx={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1.1fr 1fr' }, bgcolor: 'background.default' }}>
-      <Box
+    <Box sx={{ minHeight: '100vh', display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr' }, bgcolor: 'background.default' }}>
+      {/* <Box
         sx={{
           display: { xs: 'none', md: 'flex' },
           flexDirection: 'column',
@@ -67,10 +67,17 @@ export default function LoginPage() {
         <Typography variant="caption" sx={{ opacity: 0.6 }}>
           © {new Date().getFullYear()} {import.meta.env.VITE_COMPANY_NAME}
         </Typography>
-      </Box>
+      </Box> */}
 
-      <Box sx={{ display: 'grid', placeItems: 'center', p: 2 }}>
-        <Card sx={{ width: '100%', maxWidth: 420 }}>
+      <Box sx={{ display: 'grid', placeItems: 'center'}}>
+        
+        <Card sx={{ width: '100%', maxWidth: 420, pt:3 }}>
+          <Stack direction="row" spacing={1.5} alignItems="center" justifyContent="center">
+            <Box component="img" src="/favicon.svg" alt="" sx={{ width: 60, height: 60 }} />
+            <Typography variant="h6" fontWeight={800}>
+              CIMS
+            </Typography>
+          </Stack>
           <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
             <Typography variant="h5" sx={{ mb: 0.5 }}>
               Sign in
