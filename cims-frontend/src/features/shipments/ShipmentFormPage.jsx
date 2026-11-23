@@ -80,16 +80,18 @@ export default function ShipmentFormPage() {
         <FormProvider {...methods}>
           <Stack component="form" spacing={3} onSubmit={onSubmit} noValidate>
             <SectionCard title="Vessel Details" icon={<DirectionsBoatOutlinedIcon />}>
-              <FormGrid columns={4}>
+              <FormGrid columns={6}>
                 <RHFText name="vesselName" label="Vessel Name" required placeholder="MV …" slotProps={{ htmlInput: { style: { textTransform: 'uppercase' } } }} />
                 <RHFAutocomplete name="vesselType" label="Vessel Type" options={lookups?.vesselTypes ?? []} required />
                 <RHFText name="imoNo" label="IMO No" required slotProps={{ htmlInput: { inputMode: 'numeric', maxLength: 7 } }} />
                 <RHFText name="flag" label="Flag" required />
-                <RHFText name="portOfRegistry" label="Port of Registry" required />
+                <RHFText name="portOfRegistry" label="Port of Registry" />
                 <RHFText name="holdHatch" label="Hold / Hatch" placeholder="e.g. 5/5" />
                 <RHFText name="demurrageRate" label="Demurrage Rate" type="number" endAdornment="USD/day" />
                 <RHFText name="status" label="Vessel Status" options={lookups?.vesselStatuses ?? []} required />
-                <RHFText name="etd" label="Estimated Departure (ETD)" type="date" />
+                <RHFText name="etc" label="Estimated Completion (ETC)" type="date" />
+                <RHFText name="spd" label="Shipping Date" type="date" />
+                <RHFText name="sld" label="Sailing Date" type="date" />
                 <RHFText name="eta" label="Estimated Arrival (ETA)" type="date" required />
               </FormGrid>
             </SectionCard>

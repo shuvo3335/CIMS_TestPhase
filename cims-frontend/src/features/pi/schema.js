@@ -5,7 +5,7 @@ export const piSchema = z
   .object({
     contractId: reqStr('Sales contract'),
     piNo: reqStr('PI No', 60),
-    lcType: z.enum(['SIGHT', 'USANCE'], { required_error: 'LC type is required', invalid_type_error: 'LC type is required' }),
+    lcType: z.enum(['SIGHT', 'UPAS'], { required_error: 'LC type is required', invalid_type_error: 'LC type is required' }),
     spiDate: reqDate('SPI date'),
     spiValidity: reqDate('SPI validity'),
     unitPrice: reqNum('SPI unit price'),

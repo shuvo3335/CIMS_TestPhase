@@ -50,7 +50,9 @@ export default function ShipmentViewPage() {
               { label: 'Hold / Hatch', value: s.holdHatch },
               { label: 'Demurrage Rate', value: s.demurrageRate != null ? `${fmtMoney(s.demurrageRate, 'USD')} / day` : '—' },
               { label: 'Total BL Qty', value: fmtQty(s.totalBlQty) },
-              { label: 'ETD', value: fmtDate(s.etd) },
+              { label: 'ETC', value: fmtDate(s.etc) },
+              { label: 'Shipping Date', value: fmtDate(s.spd) },
+              { label: 'Sailing Date', value: fmtDate(s.sld) },
               { label: 'ETA', value: fmtDate(s.eta), emphasize: true },
             ]}
           />

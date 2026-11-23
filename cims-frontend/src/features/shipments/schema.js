@@ -43,7 +43,9 @@ export const shipmentSchema = z
     demurrageRate: optNum('Demurrage rate'),
     status: reqStr('Vessel status'),
     eta: reqDate('Estimated arrival date'),
-    etd: optDate(),
+    etc: optDate(),
+    spd: optDate(),
+    sld: optDate(),
     nominationFiles: fileList,
     contracts: z.array(shipmentContract).min(1, 'Add at least one contract to this vessel'),
   })
@@ -77,7 +79,9 @@ export const shipmentDefaults = {
   demurrageRate: '',
   status: 'Not Start Yet',
   eta: '',
-  etd: '',
+  etc: '',
+  spd: '',
+  sld: '',
   nominationFiles: [],
   contracts: [emptyShipmentContract()],
 };
@@ -105,7 +109,9 @@ export const toFormValues = (sh, pis) => ({
   demurrageRate: s(sh.demurrageRate),
   status: sh.status,
   eta: sh.eta ?? '',
-  etd: sh.etd ?? '',
+  etc: sh.etc ?? '',
+  spd: sh.spd ?? '',
+  sld: sh.sld ?? '',
   nominationFiles: sh.nominationFiles || [],
   contracts: sh.contracts.map((c) => ({
     contractId: c.contractId,

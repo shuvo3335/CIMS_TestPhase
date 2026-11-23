@@ -82,7 +82,7 @@ async function seed() {
   const blQtys = [7985.5, 8002.1, 7996.75, 8000, 7990.2, 7498.3, 7505];
   const shipment = {
     id: 'sh_oceanpride', vesselName: 'MV OCEAN PRIDE', vesselType: 'Supramax', imoNo: '9456123', flag: 'Panama', portOfRegistry: 'Panama City',
-    holdHatch: '5/5', demurrageRate: 14500, status: 'Sailed', eta: '2026-11-25', etd: '2026-10-02',
+    holdHatch: '5/5', demurrageRate: 14500, status: 'Sailed', eta: '2026-11-25', etc: '2026-11-20', spd: '2026-10-01', sld: '2026-10-02',
     nominationFiles: [sampleFile('Vessel Nomination - MV Ocean Pride.pdf')],
     contracts: [
       {

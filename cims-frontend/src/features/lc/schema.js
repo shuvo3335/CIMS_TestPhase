@@ -29,15 +29,15 @@ const lcItem = z
 
 export const lcSchema = z
   .object({
-    lcType: z.enum(['SIGHT', 'USANCE'], { errorMap: () => ({ message: 'LC type is required' }) }),
+    lcType: z.enum(['SIGHT', 'UPAS'], { errorMap: () => ({ message: 'LC type is required' }) }),
     paymentDurationDays: optNum('Payment duration'),
     bank: reqStr('Bank name'),
     contractId: reqStr('Sales contract'),
     lcs: z.array(lcItem).min(1, 'Add at least one LC'),
   })
   .superRefine((v, ctx) => {
-    if (v.lcType === 'USANCE' && !(v.paymentDurationDays > 0)) {
-      ctx.addIssue({ path: ['paymentDurationDays'], code: 'custom', message: 'Payment duration is required for Usance LC' });
+    if (v.lcType === 'UPAS' && !(v.paymentDurationDays > 0)) {
+      ctx.addIssue({ path: ['paymentDurationDays'], code: 'custom', message: 'Payment duration is required for UPAS LC' });
     }
     const seen = new Set();
     v.lcs.forEach((l, i) => {

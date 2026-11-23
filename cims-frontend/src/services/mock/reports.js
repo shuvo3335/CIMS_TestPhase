@@ -53,7 +53,11 @@ function buildContractRow(shipment, sc) {
     shipmentFrom: c.shipmentFrom,
     shipmentTo: c.shipmentTo,
     eta: shipment.eta,
-    etd: shipment.etd,
+    etc: shipment.etc,
+    spd: shipment.spd,
+    sld: shipment.sld,
+    lcNos: lcs.map((l) => l.lcNo).filter(Boolean),
+    blNos: (sc.spiDocs || []).map((d) => d.blNo).filter(Boolean),
     contractQty: c.totalQty,
     blQty,
     lcDoneQty,
@@ -71,10 +75,55 @@ function buildContractRow(shipment, sc) {
   };
 }
 
+/** Row for a contract that is not on any vessel yet; vessel/ETA/ETC/SPD/SLD/BL stay empty until assigned. */
+function buildUnassignedRow(c) {
+  const lcs = repos.lcs.filter((l) => l.contractId === c.id);
+  const pi = repos.pis.filter((p) => p.contractId === c.id)[0];
+  const lcDoneQty = sumBy(lcs, 'doneQty');
+  return {
+    id: `unassigned:${c.id}`,
+    shipmentId: null,
+    contractId: c.id,
+    vesselName: null,
+    imoNo: null,
+    vesselStatus: null,
+    contractNo: c.contractNo,
+    commodity: c.commodity,
+    origin: c.origin,
+    unit: c.unit,
+    currency: c.currency,
+    shipmentFrom: c.shipmentFrom,
+    shipmentTo: c.shipmentTo,
+    eta: null,
+    etc: null,
+    spd: null,
+    sld: null,
+    lcNos: lcs.map((l) => l.lcNo).filter(Boolean),
+    blNos: [],
+    contractQty: c.totalQty,
+    blQty: 0,
+    lcDoneQty,
+    lcPendingQty: calcLcPending(c.totalQty, lcDoneQty),
+    loi: null,
+    loiDate: null,
+    docPaymentAcceptance: null,
+    docPaymentDate: null,
+    dutyPaidQty: null,
+    dischargePermissionQty: null,
+    remarks: c.remarks,
+    pol: pi?.pol,
+    pod: pi?.pod,
+    spiRows: [],
+  };
+}
+
 export const reports = {
   async vesselRows() {
     await delay();
-    return repos.shipments.all().flatMap((s) => (s.contracts || []).map((sc) => buildContractRow(s, sc)));
+    const shipments = repos.shipments.all();
+    const assigned = new Set(shipments.flatMap((s) => (s.contracts || []).map((sc) => sc.contractId)));
+    const unassigned = repos.contracts.all().filter((c) => !assigned.has(c.id)).map(buildUnassignedRow);
+    return [...shipments.flatMap((s) => (s.contracts || []).map((sc) => buildContractRow(s, sc))), ...unassigned];
   },
   async vesselDetail(shipmentId) {
     await delay(150);

@@ -135,7 +135,7 @@ export default function LCFormPage() {
                     type="number"
                     endAdornment="days"
                     disabled={!lcType}
-                    required={lcType === 'USANCE'}
+                    required={lcType === 'UPAS'}
                     helperText={!lcType ? 'Select LC type first' : lcType === 'SIGHT' ? 'Optional for Sight LC' : undefined}
                   />
                   <RHFAutocomplete name="bank" label="Bank Name" options={lookups?.banks ?? []} required />

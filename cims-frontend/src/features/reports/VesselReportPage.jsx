@@ -13,7 +13,7 @@ import { labelOf, LOI_OPTIONS, DOC_ACCEPTANCE_OPTIONS } from '@/utils/constants'
 
 /** Columns shared by the grid and CSV export, in the order the business asked for. */
 export const reportColumns = [
-  { field: 'vesselName', headerName: 'Vessel Name', pinned: 'left', minWidth: 170 },
+  { field: 'vesselName', headerName: 'Vessel Name', pinned: 'left', minWidth: 170, valueFormatter: (p) => (p.data?.__total ? p.value : p.value || 'Not Assigned') },
   { field: 'contractNo', headerName: 'Contract No', minWidth: 160 },
   { field: 'commodity', headerName: 'Commodity Name', minWidth: 180 },
   { field: 'vesselStatus', headerName: 'Vessel Status', minWidth: 150, cellRenderer: (p) => (p.data?.__total ? '' : <StatusChip value={p.value} />) },
@@ -23,7 +23,22 @@ export const reportColumns = [
     minWidth: 220,
     valueGetter: (p) => (p.data?.__total ? '' : fmtDateRange(p.data.shipmentFrom, p.data.shipmentTo)),
   },
-  dateCol('eta', 'ETA / Arrival'),
+  dateCol('eta', 'ETA / Arrival', { valueFormatter: (p) => (p.data?.__total ? '' : p.value ? fmtDate(p.value) : 'Not Assigned') }),
+  dateCol('etc', 'ETC', { valueFormatter: (p) => (p.data?.__total ? '' : p.value ? fmtDate(p.value) : 'Not Assigned') }),
+  dateCol('spd', 'Shipping Date', { valueFormatter: (p) => (p.data?.__total ? '' : p.value ? fmtDate(p.value) : 'Not Assigned') }),
+  dateCol('sld', 'Sailing Date', { valueFormatter: (p) => (p.data?.__total ? '' : p.value ? fmtDate(p.value) : 'Not Assigned') }),
+  {
+    field: 'lcNos',
+    headerName: 'LC No',
+    minWidth: 150,
+    valueFormatter: (p) => (p.data?.__total ? '' : p.value?.length ? p.value.join(', ') : 'No LC Yet'),
+  },
+  {
+    field: 'blNos',
+    headerName: 'BL No',
+    minWidth: 150,
+    valueFormatter: (p) => (p.data?.__total ? '' : p.value?.length ? p.value.join(', ') : 'No BL Yet'),
+  },
   numCol('contractQty', 'Contract Qty', { minWidth: 130 }),
   numCol('blQty', 'BL Qty'),
   numCol('lcDoneQty', 'LC Done Qty', { minWidth: 130 }),
@@ -78,6 +93,9 @@ export default function VesselReportPage() {
     [rows],
   );
 
+  const firstAssigned = rows.find((r) => r.shipmentId);
+  const openRow = (r) => navigate(r.shipmentId ? `/reports/vessels/${r.shipmentId}` : `/contracts/${r.contractId}`);
+
   const filtered = status || commodity || etaFrom || etaTo;
 
   return (
@@ -87,8 +105,8 @@ export default function VesselReportPage() {
         subtitle="One row per vessel and contract. Click a row to open the single-vessel report and print it."
         breadcrumbs={[{ label: 'Reports' }, { label: 'Vessel Report' }]}
         actions={
-          rows[0] && (
-            <Button variant="outlined" startIcon={<PrintOutlinedIcon />} onClick={() => navigate(`/reports/vessels/${rows[0].shipmentId}`)}>
+          firstAssigned && (
+            <Button variant="outlined" startIcon={<PrintOutlinedIcon />} onClick={() => navigate(`/reports/vessels/${firstAssigned.shipmentId}`)}>
               Single Vessel View
             </Button>
           )
@@ -101,8 +119,8 @@ export default function VesselReportPage() {
         pinnedBottomRowData={totals}
         exportFileName={`vessel-report-${new Date().toISOString().slice(0, 10)}`}
         emptyText="No vessels in the report"
-        onRowClicked={(r) => navigate(`/reports/vessels/${r.shipmentId}`)}
-        onView={(r) => navigate(`/reports/vessels/${r.shipmentId}`)}
+        onRowClicked={openRow}
+        onView={openRow}
         getRowId={(p) => p.data.id}
         toolbar={
           <>

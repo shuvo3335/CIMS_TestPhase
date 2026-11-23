@@ -7,7 +7,7 @@ export const PACKAGING = [
 
 export const LC_TYPES = [
   { value: 'SIGHT', label: 'Sight LC' },
-  { value: 'USANCE', label: 'Usance LC' },
+  { value: 'UPAS', label: 'Upas LC' },
 ];
 
 export const CONTRACT_STATUS = [
