@@ -71,12 +71,13 @@ export default function ContractFormPage() {
               <Alert severity="info">This contract already has a PI ({existing.data.piNo}), so its total quantity is locked.</Alert>
             )}
             <SectionCard title="Contract Information" icon={<HandshakeOutlinedIcon />}>
-              <FormGrid>
+              <FormGrid columns={4}>
                 <RHFText name="contractNo" label="Contract No" required />
                 <RHFText name="date" label="Contract Date" type="date" required />
                 <RHFText name="status" label="Status" options={CONTRACT_STATUS} required />
                 <RHFText name="buyer" label="Buyer Name" required />
                 <RHFText name="seller" label="Seller Name" required />
+                <RHFText name="tolerance" label="Tolerance (%)" type="number" />
                 <RHFAutocomplete name="incoterms" label="Incoterms" options={lookups?.incoterms ?? []} required />
               </FormGrid>
             </SectionCard>
@@ -93,7 +94,7 @@ export default function ContractFormPage() {
                   <RHFText name="unitPrice" label="Unit Price" type="number" required />
                   <RHFText name="currency" label="Currency" options={lookups?.currencies ?? ['USD']} required />
                 </FormGrid>
-                <ReadOnlyField label="Total Price (Unit Price × Total Qty)" value={fmtMoney(totalPrice, currency)} emphasize />
+                <ReadOnlyField label="Total Price" value={fmtMoney(totalPrice, currency)} emphasize />
                 <span />
                 <RHFText name="packaging" label="Packaging" options={PACKAGING} required />
                 {packaging === 'CONTAINER' && (

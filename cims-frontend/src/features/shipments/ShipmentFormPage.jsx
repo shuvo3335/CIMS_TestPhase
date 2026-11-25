@@ -21,7 +21,7 @@ import { contractHooks, piHooks, shipmentHooks, useLookups } from '@/hooks/useAp
 import { useSubmit } from '@/hooks/useSubmit';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { fmtQty, fmtMoney, fmtDateRange } from '@/utils/format';
-import { sumBy, toNum } from '@/utils/calc';
+import { sumBy, toNum, calcSpiAmount } from '@/utils/calc';
 import { LOI_OPTIONS, DOC_ACCEPTANCE_OPTIONS } from '@/utils/constants';
 import { FormActions } from '@/features/contracts/ContractFormPage';
 import { shipmentSchema, shipmentDefaults, emptyShipmentContract, alignSpiDocs, toFormValues } from './schema';
@@ -256,7 +256,12 @@ function ContractBlock({ index, contracts, pis, usedElsewhere, onRemove }) {
                           <RHFText name={`${p}.blDate`} type="date" />
                         </TableCell>
                         <TableCell>
-                          <RHFText name={`${p}.blQty`} type="number" placeholder="0.00" />
+                          <RHFText
+                            name={`${p}.blQty`}
+                            type="number"
+                            placeholder="0.00"
+                            onValueChange={(v) => setValue(`${p}.ciAmount`, String(calcSpiAmount(v, pi.unitPrice)), { shouldDirty: true })}
+                          />
                           {over && (
                             <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: 'warning.main', mt: 0.5 }}>
                               <WarningAmberRoundedIcon sx={{ fontSize: 14 }} />
@@ -271,7 +276,7 @@ function ContractBlock({ index, contracts, pis, usedElsewhere, onRemove }) {
                           <RHFText name={`${p}.ciDate`} type="date" />
                         </TableCell>
                         <TableCell>
-                          <RHFText name={`${p}.ciAmount`} type="number" placeholder="0.00" />
+                          <RHFText name={`${p}.ciAmount`} type="number" placeholder="0.00" slotProps={{ input: { readOnly: true } }} />
                         </TableCell>
                       </TableRow>
                     );

@@ -50,6 +50,7 @@ export default function ContractViewPage() {
               { label: 'Contract No', value: c.contractNo, emphasize: true },
               { label: 'Contract Date', value: fmtDate(c.date) },
               { label: 'Incoterms', value: c.incoterms },
+              { label: 'Tolerance', value: c.tolerance != null ? `${c.tolerance}%` : '—' },
               { label: 'Buyer', value: c.buyer },
               { label: 'Seller', value: c.seller },
               { label: 'Vessel', value: c.vesselName || 'Not assigned' },

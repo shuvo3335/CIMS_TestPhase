@@ -22,6 +22,7 @@ export default function ContractListPage() {
       { field: 'commodity', headerName: 'Commodity', minWidth: 180 },
       { field: 'origin', headerName: 'Origin' },
       { field: 'incoterms', headerName: 'Incoterms', maxWidth: 120 },
+      { field: 'tolerance', headerName: 'Tolerance', maxWidth: 120, valueFormatter: (p) => (p.value == null || p.value === '' ? '' : `${p.value}%`) },
       numCol('totalQty', 'Total Qty'),
       { field: 'unit', headerName: 'Unit', maxWidth: 90 },
       numCol('unitPrice', 'Unit Price'),
