@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from 'react';
 import { useForm, FormProvider, useWatch, useFieldArray, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Stack, Button, Box, Typography, Alert, IconButton, Tooltip, Table, TableHead, TableRow, TableCell, TableBody, TableFooter, Chip, Divider,
 } from '@mui/material';
@@ -30,6 +30,8 @@ export default function ShipmentFormPage() {
   const { id } = useParams();
   const isEdit = !!id;
   const navigate = useNavigate();
+  const [search] = useSearchParams();
+  const presetContractId = search.get('contract');
 
   const { data: contracts = [], isLoading: l1 } = contractHooks.useList();
   const { data: pis = [], isLoading: l2 } = piHooks.useList();
@@ -49,6 +51,18 @@ export default function ShipmentFormPage() {
     // pis intentionally read once both have loaded
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [existing.data, l2, reset]);
+
+  // Opened from a contract / LC page (?contract=…): pre-select that contract and its SPI rows.
+  useEffect(() => {
+    if (isEdit || !presetContractId || l1 || l2) return;
+    const c = contracts.find((x) => x.id === presetContractId);
+    if (!c || c.shipmentId) return;
+    if (methods.getValues('contracts.0.contractId')) return;
+    const p = pis.find((x) => x.contractId === presetContractId);
+    methods.setValue('contracts.0', { ...emptyShipmentContract(), contractId: presetContractId, spiDocs: alignSpiDocs(p) });
+    // runs once the lists have loaded
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEdit, presetContractId, l1, l2]);
 
   const selected = useWatch({ control, name: 'contracts' }) || [];
   const assignable = useMemo(() => contracts.filter((c) => !c.shipmentId || c.shipmentId === id), [contracts, id]);

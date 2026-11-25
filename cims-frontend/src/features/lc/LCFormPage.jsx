@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useForm, FormProvider, useWatch, useFieldArray, useFormContext } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Stack, Button, Box, Typography, Alert, IconButton, Tooltip, LinearProgress, Chip, Card, CardContent } from '@mui/material';
+import { Stack, Button, Fab, Portal, Box, Typography, Alert, IconButton, Tooltip, LinearProgress, Chip, Card, CardContent } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { useSnackbar } from 'notistack';
@@ -101,6 +101,14 @@ export default function LCFormPage() {
   const totalSpis = pi?.spis.length ?? 0;
   const availableForNew = (pi?.spis || []).filter((s) => !takenSpiIds.has(s.id)).length - (isEdit ? 0 : fields.length);
 
+  // Header "Open LC" button: make sure there is an LC form to fill, then scroll to it.
+  const lcFieldsRef = useRef(null);
+  const goToLcFields = () => {
+    if (!contract) return;
+    if (fields.length === 0 && availableForNew > 0) append(emptyLc(contract.currency));
+    setTimeout(() => lcFieldsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+  };
+
   // LCs already saved for this contract (the one being edited lives in the form, so it is excluded here).
   const savedLcs = useMemo(() => allLcs.filter((l) => l.contractId === contractId && l.id !== id), [allLcs, contractId, id]);
   const savedValue = round2(savedLcs.reduce((a, l) => a + toNum(latestLcValue(l)), 0));
@@ -170,6 +178,21 @@ export default function LCFormPage() {
         title={isEdit ? `Edit LC ${existing.data?.lcNo ?? ''}` : 'Open Letter of Credit'}
         subtitle="One LC per SPI. Select the LC type, bank and contract, then open an LC for each SPI."
         breadcrumbs={[{ label: 'Letter of Credit', to: '/lc' }, { label: isEdit ? 'Edit' : 'New' }]}
+        actions={
+          isEdit && pi && totalSpis - openedCount > 0 ? (
+            <Button variant="outlined" color="secondary" startIcon={<AddIcon />} onClick={() => navigate(`/lc/new?contract=${pi.contractId}`)}>
+              Open LC ({totalSpis - openedCount} pending)
+            </Button>
+          ) : !isEdit ? (
+            <Tooltip title={contract ? '' : 'Select a sales contract first'}>
+              <span>
+                <Button variant="contained" color="secondary" startIcon={<AddIcon />} disabled={!contract} onClick={goToLcFields}>
+                  Open LC
+                </Button>
+              </span>
+            </Tooltip>
+          ) : undefined
+        }
       />
       {loading ? (
         <FormSkeleton sections={2} />
@@ -289,7 +312,7 @@ export default function LCFormPage() {
             )}
 
             {contract && (
-              <Stack spacing={2}>
+              <Stack spacing={2} ref={lcFieldsRef} sx={{ scrollMarginTop: 16 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
                   <Typography variant="h6">LC Details {fields.length > 0 && `(${fields.length})`}</Typography>
                   {!isEdit && (
@@ -331,7 +354,92 @@ export default function LCFormPage() {
           </Stack>
         </FormProvider>
       )}
+      {!loading && isEdit && (
+        <DraggableFab
+          title={pi && totalSpis - openedCount > 0 ? `Open LC (${totalSpis - openedCount} SPI(s) pending) · drag to move` : 'Open a new LC · drag to move'}
+          onClick={() => navigate(pi && totalSpis - openedCount > 0 ? `/lc/new?contract=${pi.contractId}` : '/lc/new')}
+        />
+      )}
     </>
+  );
+}
+
+const FAB_SIZE = 56;
+const FAB_KEY = 'cims.lcFabPos';
+const clampPos = (x, y) => ({
+  x: Math.min(Math.max(8, x), window.innerWidth - FAB_SIZE - 8),
+  y: Math.min(Math.max(8, y), window.innerHeight - FAB_SIZE - 8),
+});
+
+/** Round, icon-only floating button that can be dragged anywhere; its position is remembered. Rendered in a portal so no parent layout can hide it. */
+function DraggableFab({ title, onClick }) {
+  const [pos, setPos] = useState(() => {
+    try {
+      const p = JSON.parse(localStorage.getItem(FAB_KEY));
+      return p && Number.isFinite(p.x) && Number.isFinite(p.y) ? clampPos(p.x, p.y) : null;
+    } catch {
+      return null;
+    }
+  });
+  const drag = useRef(null);
+  const wasDragged = useRef(false);
+
+  const onPointerDown = (e) => {
+    const r = e.currentTarget.getBoundingClientRect();
+    drag.current = { dx: e.clientX - r.left, dy: e.clientY - r.top, sx: e.clientX, sy: e.clientY, moved: false };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+  const onPointerMove = (e) => {
+    const d = drag.current;
+    if (!d) return;
+    if (!d.moved && Math.hypot(e.clientX - d.sx, e.clientY - d.sy) < 5) return;
+    d.moved = true;
+    setPos(clampPos(e.clientX - d.dx, e.clientY - d.dy));
+  };
+  const onPointerUp = (e) => {
+    const d = drag.current;
+    drag.current = null;
+    if (!d?.moved) return;
+    wasDragged.current = true;
+    const p = clampPos(e.clientX - d.dx, e.clientY - d.dy);
+    try {
+      localStorage.setItem(FAB_KEY, JSON.stringify(p));
+    } catch {
+      /* position just won't be remembered */
+    }
+  };
+
+  return (
+    <Portal>
+      <Tooltip title={title} placement="left">
+        <Fab
+          color="secondary"
+          aria-label="Open LC"
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={onPointerUp}
+          onClick={() => {
+            if (wasDragged.current) {
+              wasDragged.current = false;
+              return;
+            }
+            onClick();
+          }}
+          sx={{
+            position: 'fixed',
+            ...(pos ? { left: pos.x, top: pos.y } : { right: 32, bottom: 104 }),
+            width: FAB_SIZE,
+            height: FAB_SIZE,
+            zIndex: (t) => t.zIndex.modal - 1,
+            touchAction: 'none',
+            cursor: 'grab',
+            '&:active': { cursor: 'grabbing' },
+          }}
+        >
+          <AddIcon />
+        </Fab>
+      </Tooltip>
+    </Portal>
   );
 }
 

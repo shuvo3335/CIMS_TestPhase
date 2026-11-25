@@ -27,6 +27,11 @@ export default function PIViewPage() {
         breadcrumbs={[{ label: 'Proforma Invoice', to: '/pi' }, { label: pi.piNo }]}
         actions={
           <>
+            {pi.lcCount > 0 && (
+              <Button variant="outlined" startIcon={<AccountBalanceOutlinedIcon />} onClick={() => navigate(`/lc?contract=${pi.contractId}`)}>
+                View LCs ({pi.lcCount})
+              </Button>
+            )}
             {pendingLc > 0 && (
               <Button variant="outlined" color="secondary" startIcon={<AccountBalanceOutlinedIcon />} onClick={() => navigate(`/lc/new?contract=${pi.contractId}`)}>
                 Open LC ({pendingLc} pending)

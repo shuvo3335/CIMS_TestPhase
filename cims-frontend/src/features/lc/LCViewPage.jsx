@@ -5,7 +5,8 @@ import PageHeader from '@/components/PageHeader';
 import { SectionCard, DetailGrid, StatusChip } from '@/components/Common';
 import { FileList } from '@/components/FileUploader';
 import { FormSkeleton, ErrorState, EmptyState } from '@/components/States';
-import { lcHooks } from '@/hooks/useApi';
+import DirectionsBoatOutlinedIcon from '@mui/icons-material/DirectionsBoatOutlined';
+import { lcHooks, contractHooks } from '@/hooks/useApi';
 import { fmtDate, fmtQty, fmtMoney, ordinal } from '@/utils/format';
 import { latestLcValue, lcStatus } from '@/utils/calc';
 import { labelOf, LC_TYPES } from '@/utils/constants';
@@ -16,10 +17,12 @@ export default function LCViewPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { data: lc, isLoading, isError, error, refetch } = lcHooks.useOne(id);
+  const { data: contracts = [] } = contractHooks.useList();
 
   if (isError) return <ErrorState error={error} onRetry={refetch} />;
   if (isLoading) return <FormSkeleton />;
   const status = lcStatus(lc);
+  const shipmentId = contracts.find((c) => c.id === lc.contractId)?.shipmentId;
 
   return (
     <>
@@ -28,9 +31,20 @@ export default function LCViewPage() {
         subtitle={`${lc.bank} · SPI ${lc.spiNo}`}
         breadcrumbs={[{ label: 'Letter of Credit', to: '/lc' }, { label: lc.lcNo }]}
         actions={
-          <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/lc/${id}/edit`)}>
-            Edit
-          </Button>
+          <>
+            {shipmentId ? (
+              <Button variant="outlined" startIcon={<DirectionsBoatOutlinedIcon />} onClick={() => navigate(`/shipments/${shipmentId}`)}>
+                View Shipment
+              </Button>
+            ) : (
+              <Button variant="outlined" color="secondary" startIcon={<DirectionsBoatOutlinedIcon />} onClick={() => navigate(`/shipments/new?contract=${lc.contractId}`)}>
+                Create Shipment
+              </Button>
+            )}
+            <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/lc/${id}/edit`)}>
+              Edit
+            </Button>
+          </>
         }
       />
       <Stack spacing={3}>
