@@ -1,5 +1,5 @@
 import { repos, delay, ApiError, eqi } from './core';
-import { toNum } from '@/utils/calc';
+import { toNum, maxWithTolerance } from '@/utils/calc';
 import { fmtQty } from '@/utils/format';
 
 const enrich = (lc) => {
@@ -42,8 +42,14 @@ function validateLc(header, item, exceptId) {
   if (item.issueDate && item.expiryDate && item.expiryDate <= item.issueDate) {
     throw new ApiError(`LC ${item.lcNo}: expiry date must be after issue date`);
   }
-  if (toNum(item.doneQty) > toNum(spi.qty)) {
-    throw new ApiError(`LC ${item.lcNo}: done qty (${fmtQty(item.doneQty)}) exceeds SPI ${spi.spiNo} qty (${fmtQty(spi.qty)})`);
+  const tol = toNum(repos.contracts.find(header.contractId)?.tolerance);
+  const maxQty = maxWithTolerance(spi.qty, tol);
+  const maxAmount = maxWithTolerance(spi.amount, tol);
+  if (toNum(item.doneQty) > maxQty) {
+    throw new ApiError(`LC ${item.lcNo}: done qty (${fmtQty(item.doneQty)}) exceeds SPI ${spi.spiNo} qty (${fmtQty(spi.qty)}) + ${tol}% tolerance (max ${fmtQty(maxQty)})`);
+  }
+  if (toNum(item.amount) > maxAmount) {
+    throw new ApiError(`LC ${item.lcNo}: amount (${fmtQty(item.amount)}) exceeds SPI ${spi.spiNo} amount (${fmtQty(spi.amount)}) + ${tol}% tolerance (max ${fmtQty(maxAmount)})`);
   }
   (item.amendments || []).forEach((a, i) => {
     if (!a.files?.length) throw new ApiError(`LC ${item.lcNo}: amendment #${i + 1} requires an amendment file`);

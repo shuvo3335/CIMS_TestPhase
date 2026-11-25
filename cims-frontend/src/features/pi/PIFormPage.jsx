@@ -153,9 +153,9 @@ export default function PIFormPage() {
               <FormGrid columns={4}>
                 <RHFText name="piNo" label="PI No" required />
                 <RHFText name="lcType" label="LC Type" options={LC_TYPES} required />
-                <RHFText name="spiDate" label="SPI Date" type="date" required />
-                <RHFText name="spiValidity" label="SPI Validity" type="date" required />
-                <RHFText name="unitPrice" label="SPI Unit Price" type="number" required endAdornment={contract?.currency} />
+                <RHFText name="spiDate" label="PI Date" type="date" required />
+                <RHFText name="spiValidity" label="PI Validity" type="date" required />
+                <RHFText name="unitPrice" label="PI Unit Price" type="number" required endAdornment={contract?.currency} />
                 <RHFAutocomplete name="pol" label="Port of Loading (PoL)" options={lookups?.ports ?? []} required />
                 <RHFAutocomplete name="pod" label="Port of Discharge (PoD)" options={lookups?.ports ?? []} required />
               </FormGrid>

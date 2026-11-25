@@ -4,6 +4,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Stack, Button, Box, Typography, Alert, IconButton, Tooltip, LinearProgress, Chip, Card, CardContent } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
+import { useSnackbar } from 'notistack';
+import { useConfirm } from '@/components/ConfirmProvider';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import AccountBalanceOutlinedIcon from '@mui/icons-material/AccountBalanceOutlined';
 import PageHeader from '@/components/PageHeader';
@@ -14,9 +17,9 @@ import { FormSkeleton, ErrorState, EmptyState } from '@/components/States';
 import { contractHooks, piHooks, lcHooks, useLookups } from '@/hooks/useApi';
 import { useSubmit } from '@/hooks/useSubmit';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
-import { fmtQty, fmtMoney } from '@/utils/format';
-import { toNum } from '@/utils/calc';
-import { LC_TYPES } from '@/utils/constants';
+import { fmtQty, fmtMoney, fmtDate } from '@/utils/format';
+import { toNum, round2, latestLcValue, maxWithTolerance, calcSpiAmount } from '@/utils/calc';
+import { LC_TYPES, labelOf } from '@/utils/constants';
 import { FormActions } from '@/features/contracts/ContractFormPage';
 import AmendmentSection from './AmendmentSection';
 import { lcSchema, lcDefaults, emptyLc, toFormValues } from './schema';
@@ -33,6 +36,10 @@ export default function LCFormPage() {
   const existing = lcHooks.useOne(id);
   const createMany = lcHooks.useCreateMany();
   const update = lcHooks.useUpdate();
+  const { data: allLcs = [] } = lcHooks.useList();
+  const removeLc = lcHooks.useRemove();
+  const confirm = useConfirm();
+  const { enqueueSnackbar } = useSnackbar();
 
   const methods = useForm({
     resolver: zodResolver(lcSchema),
@@ -53,9 +60,11 @@ export default function LCFormPage() {
   const pi = pis.find((p) => p.contractId === contractId);
 
   useEffect(() => {
-    if (!lcType) setValue('paymentDurationDays', '');
+    // Read the live form value: right after reset() on edit, the watched lcType can still be stale (empty)
+    // and would wipe the saved payment duration.
+    if (!methods.getValues('lcType')) setValue('paymentDurationDays', '');
     else clearErrors('paymentDurationDays');
-  }, [lcType, setValue, clearErrors]);
+  }, [lcType, setValue, clearErrors, methods]);
 
   const contractOptions = useMemo(
     () =>
@@ -92,11 +101,53 @@ export default function LCFormPage() {
   const totalSpis = pi?.spis.length ?? 0;
   const availableForNew = (pi?.spis || []).filter((s) => !takenSpiIds.has(s.id)).length - (isEdit ? 0 : fields.length);
 
+  // LCs already saved for this contract (the one being edited lives in the form, so it is excluded here).
+  const savedLcs = useMemo(() => allLcs.filter((l) => l.contractId === contractId && l.id !== id), [allLcs, contractId, id]);
+  const savedValue = round2(savedLcs.reduce((a, l) => a + toNum(latestLcValue(l)), 0));
+  const draftValue = round2((lcs || []).reduce((a, l) => a + toNum(l?.amount), 0));
+  const contractValue = toNum(contract?.totalPrice);
+  const remainingValue = round2(contractValue - savedValue - draftValue);
+
+  const onDeleteLc = async (lc) => {
+    const ok = await confirm({
+      title: `Delete LC ${lc.lcNo}?`,
+      message: `LC ${lc.lcNo} (SPI ${lc.spiNo}) and its amendments will be permanently deleted.`,
+      confirmText: 'Delete',
+      danger: true,
+    });
+    if (!ok) return;
+    try {
+      await removeLc.mutateAsync(lc.id);
+      enqueueSnackbar(`LC ${lc.lcNo} deleted`, { variant: 'success' });
+    } catch (e) {
+      await confirm({ title: 'Could not delete', message: e.message, alertOnly: true, danger: true });
+    }
+  };
+
   const onContractChange = () => {
     if (!isEdit) setValue('lcs', [], { shouldDirty: true });
   };
 
+  const tolerance = toNum(contract?.tolerance);
+
   const onSubmit = methods.handleSubmit((values) => {
+    // LC qty / amount may exceed the SPI figures only within the contract tolerance.
+    let outOfRange = false;
+    values.lcs.forEach((l, i) => {
+      const s = pi?.spis.find((x) => x.id === l.spiId);
+      if (!s) return;
+      const maxQty = maxWithTolerance(s.qty, tolerance);
+      const maxAmount = maxWithTolerance(s.amount, tolerance);
+      if (toNum(l.doneQty) > maxQty) {
+        setError(`lcs.${i}.doneQty`, { type: 'custom', message: `Max allowed ${fmtQty(maxQty, contract.unit)} (SPI qty + ${tolerance}% tolerance)` });
+        outOfRange = true;
+      }
+      if (toNum(l.amount) > maxAmount) {
+        setError(`lcs.${i}.amount`, { type: 'custom', message: `Max allowed ${fmtMoney(maxAmount, l.currency)} (SPI amount + ${tolerance}% tolerance)` });
+        outOfRange = true;
+      }
+    });
+    if (outOfRange) return undefined;
     const header = { lcType: values.lcType, paymentDurationDays: values.paymentDurationDays, bank: values.bank, contractId: values.contractId };
     return submit(
       () => (isEdit ? update.mutateAsync({ id, header, item: values.lcs[0] }) : createMany.mutateAsync({ header, items: values.lcs })),
@@ -173,8 +224,69 @@ export default function LCFormPage() {
                     <LinearProgress variant="determinate" color="secondary" value={totalSpis ? (openedCount / totalSpis) * 100 : 0} sx={{ height: 6, borderRadius: 3 }} />
                   </Box>
                 )}
+                {contract && (
+                  <DetailGrid
+                    columns={4}
+                    items={[
+                      { label: 'Contract Value', value: fmtMoney(contractValue, contract.currency) },
+                      { label: 'LC Value Opened', value: fmtMoney(round2(savedValue + draftValue), contract.currency) },
+                      { label: 'Remaining LC Value', value: fmtMoney(remainingValue, contract.currency), emphasize: true },
+                      { label: 'Opened LCs', value: savedLcs.length + (lcs?.length || 0) },
+                    ]}
+                  />
+                )}
+                {contract && remainingValue < 0 && (
+                  <Alert severity="warning">LC value exceeds the contract value by {fmtMoney(Math.abs(remainingValue), contract.currency)}.</Alert>
+                )}
               </Stack>
             </SectionCard>
+
+            {contract && savedLcs.length > 0 && (
+              <Stack spacing={2}>
+                <Typography variant="h6">Previously Opened LCs ({savedLcs.length})</Typography>
+                {savedLcs.map((l) => (
+                  <SectionCard
+                    key={l.id}
+                    title={
+                      <Stack direction="row" spacing={1} alignItems="center">
+                        <span>{l.lcNo}</span>
+                        <Chip size="small" variant="outlined" color="secondary" label={l.spiNo} />
+                      </Stack>
+                    }
+                    action={
+                      <Stack direction="row" spacing={0.5}>
+                        <Tooltip title="Edit this LC">
+                          <IconButton size="small" onClick={() => navigate(`/lc/${l.id}/edit`)}>
+                            <EditOutlinedIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Delete this LC">
+                          <IconButton size="small" color="error" onClick={() => onDeleteLc(l)}>
+                            <DeleteOutlineIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Stack>
+                    }
+                  >
+                    <DetailGrid
+                      columns={4}
+                      items={[
+                        { label: 'LC Type', value: labelOf(LC_TYPES, l.lcType) },
+                        { label: 'Payment Duration', value: l.paymentDurationDays ? `${l.paymentDurationDays} days` : '—' },
+                        { label: 'Bank', value: l.bank },
+                        { label: 'Insurance Cover Note', value: l.insuranceCoverNoteNo },
+                        { label: 'Issue Date', value: fmtDate(l.issueDate) },
+                        { label: 'Expiry Date', value: fmtDate(l.expiryDate) },
+                        { label: 'LC Done Qty', value: fmtQty(l.doneQty, l.unit) },
+                        { label: 'LC Amount', value: fmtMoney(l.amount, l.currency) },
+                        { label: 'Amendments', value: l.amendments?.length ?? 0 },
+                        { label: 'Current Value', value: fmtMoney(latestLcValue(l), l.currency), emphasize: true },
+                      ]}
+                    />
+                  </SectionCard>
+                ))}
+              </Stack>
+            )}
 
             {contract && (
               <Stack spacing={2}>
@@ -207,6 +319,8 @@ export default function LCFormPage() {
                     usedInForm={lcs.filter((_, j) => j !== i).map((l) => l.spiId)}
                     currencies={lookups?.currencies ?? ['USD']}
                     unit={contract.unit}
+                    tolerance={tolerance}
+                    unitPrice={pi?.unitPrice}
                     onRemove={isEdit ? undefined : () => remove(i)}
                   />
                 ))}
@@ -221,7 +335,7 @@ export default function LCFormPage() {
   );
 }
 
-function LcCard({ index, pi, takenSpiIds, usedInForm, currencies, unit, onRemove }) {
+function LcCard({ index, pi, takenSpiIds, usedInForm, currencies, unit, tolerance, unitPrice, onRemove }) {
   const { control, setValue, getValues } = useFormContext();
   const base = `lcs.${index}`;
   const [spiId, currency] = useWatch({ control, name: [`${base}.spiId`, `${base}.currency`] });
@@ -236,10 +350,19 @@ function LcCard({ index, pi, takenSpiIds, usedInForm, currencies, unit, onRemove
     const s = pi?.spis.find((x) => x.id === val);
     if (!s) return;
     if (!getValues(`${base}.doneQty`)) setValue(`${base}.doneQty`, String(s.qty), { shouldValidate: true });
-    if (!getValues(`${base}.amount`)) setValue(`${base}.amount`, String(s.amount), { shouldValidate: true });
+    setValue(`${base}.amount`, String(calcSpiAmount(getValues(`${base}.doneQty`), unitPrice)), { shouldValidate: true });
   };
 
-  const overQty = spi && toNum(doneQty) > toNum(spi.qty);
+  // LC amount = LC qty × PI unit price
+  const onQtyChange = (val) => setValue(`${base}.amount`, String(calcSpiAmount(val, unitPrice)), { shouldValidate: true, shouldDirty: true });
+
+  const amount = useWatch({ control, name: `${base}.amount` });
+  const maxQty = spi ? maxWithTolerance(spi.qty, tolerance) : 0;
+  const maxAmount = spi ? maxWithTolerance(spi.amount, tolerance) : 0;
+  const tolNote = tolerance ? ` (+${tolerance}% tolerance)` : '';
+  const overQty = spi && toNum(doneQty) > maxQty;
+  const overAmount = spi && toNum(amount) > maxAmount;
+  const warnSx = { formHelperText: { sx: { color: 'warning.main' } } };
 
   return (
     <SectionCard
@@ -276,11 +399,29 @@ function LcCard({ index, pi, takenSpiIds, usedInForm, currencies, unit, onRemove
           label="LC Done Qty"
           type="number"
           required
+          onValueChange={onQtyChange}
           endAdornment={unit}
-          helperText={overQty ? `⚠ Exceeds SPI qty (${fmtQty(spi.qty)})` : spi ? `SPI qty ${fmtQty(spi.qty, unit)}` : undefined}
-          slotProps={overQty ? { formHelperText: { sx: { color: 'warning.main' } } } : undefined}
+          helperText={
+            overQty
+              ? `⚠ Exceeds max ${fmtQty(maxQty, unit)}${tolNote}`
+              : spi
+                ? `SPI qty ${fmtQty(spi.qty, unit)}${tolerance ? ` · max ${fmtQty(maxQty, unit)}${tolNote}` : ''}`
+                : undefined
+          }
+          slotProps={overQty ? warnSx : undefined}
         />
-        <RHFText name={`${base}.amount`} label="LC Amount / Value" type="number" required />
+        <RHFText
+          name={`${base}.amount`}
+          label="LC Amount / Value"
+          type="number"
+          required
+          helperText={
+            overAmount
+              ? `⚠ Exceeds max ${fmtMoney(maxAmount, currency)}${tolNote}`
+              : `Auto: LC qty × PI unit price${unitPrice ? ` (${fmtMoney(unitPrice, currency)})` : ''}`
+          }
+          slotProps={{ ...(overAmount ? warnSx : {}), htmlInput: { readOnly: true } }}
+        />
         <RHFText name={`${base}.currency`} label="LC Currency" options={currencies} required />
         <RHFText name={`${base}.insuranceCoverNoteNo`} label="Insurance Cover Note No" required />
         <Span>

@@ -24,7 +24,7 @@ export default function LCViewPage() {
   return (
     <>
       <PageHeader
-        title={`LC ${lc.lcNo}`}
+        title={`${lc.lcNo}`}
         subtitle={`${lc.bank} · SPI ${lc.spiNo}`}
         breadcrumbs={[{ label: 'Letter of Credit', to: '/lc' }, { label: lc.lcNo }]}
         actions={

@@ -16,6 +16,9 @@ export const calcTotalPrice = (qty, unitPrice) => round2(toNum(qty) * toNum(unit
 /** spiAmount = spiQty × unitPrice */
 export const calcSpiAmount = (qty, unitPrice) => round2(toNum(qty) * toNum(unitPrice));
 
+/** Upper limit of a value allowed within ± tolerance %, e.g. 200 with 10% → 220. */
+export const maxWithTolerance = (base, tolerancePct) => round2(toNum(base) * (1 + toNum(tolerancePct) / 100));
+
 export const sumBy = (arr, key) =>
   round2((arr || []).reduce((acc, item) => acc + toNum(typeof key === 'function' ? key(item) : item?.[key]), 0));
 
