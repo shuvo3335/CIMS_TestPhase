@@ -10,6 +10,7 @@ import { useVesselReport, useLookups } from '@/hooks/useApi';
 import { sumBy } from '@/utils/calc';
 import { fmtDateRange, fmtDate } from '@/utils/format';
 import { labelOf, LOI_OPTIONS, DOC_ACCEPTANCE_OPTIONS } from '@/utils/constants';
+import { useCan } from '@/store/authStore';
 
 /** Columns shared by the grid and CSV export, in the order the business asked for. */
 export const reportColumns = [
@@ -68,6 +69,7 @@ const QTY_FIELDS = ['contractQty', 'blQty', 'lcDoneQty', 'lcPendingQty', 'dutyPa
 
 export default function VesselReportPage() {
   const navigate = useNavigate();
+  const can = useCan();
   const { data = [], isLoading } = useVesselReport();
   const { data: lookups } = useLookups();
   const [status, setStatus] = useState('');
@@ -95,7 +97,10 @@ export default function VesselReportPage() {
   );
 
   const firstAssigned = rows.find((r) => r.shipmentId);
-  const openRow = (r) => navigate(r.shipmentId ? `/reports/vessels/${r.shipmentId}` : `/contracts/${r.contractId}`);
+  const openRow = (r) => {
+    if (r.shipmentId) return navigate(`/reports/vessels/${r.shipmentId}`);
+    if (can('sales_contract', 'view')) navigate(`/contracts/${r.contractId}`);
+  };
 
   const filtered = status || commodity || etaFrom || etaTo;
 

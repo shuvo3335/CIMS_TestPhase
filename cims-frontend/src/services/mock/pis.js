@@ -1,4 +1,4 @@
-import { repos, delay, ApiError, eqi } from './core';
+import { repos, delay, ApiError, eqi, assertCan } from './core';
 import { uid } from '../storage';
 import { settings } from './lookups';
 import { calcSpiAmount, checkSpiTotal, toNum, sumBy } from '@/utils/calc';
@@ -85,11 +85,13 @@ export const pis = {
     return enrich(pi);
   },
   async create(data) {
+    assertCan('pi', 'create');
     await delay();
     validate(data);
     return enrich(repos.pis.insert(normalize(data)));
   },
   async update(id, data) {
+    assertCan('pi', 'edit');
     await delay();
     const current = repos.pis.find(id);
     if (!current) throw new ApiError('PI not found', 404);
@@ -107,6 +109,7 @@ export const pis = {
     return enrich(repos.pis.update(id, normalize(data)));
   },
   async remove(id) {
+    assertCan('pi', 'delete');
     await delay();
     const lcs = repos.lcs.filter((l) => l.piId === id);
     if (lcs.length) throw new ApiError(`This PI has ${lcs.length} LC(s). Delete those LCs first.`, 409);

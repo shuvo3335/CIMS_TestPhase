@@ -6,9 +6,12 @@ import PageHeader from '@/components/PageHeader';
 import DataGrid, { numCol, dateCol } from '@/components/DataGrid';
 import { StatusChip } from '@/components/Common';
 import { shipmentHooks } from '@/hooks/useApi';
+import Can from '@/components/Can';
+import { useCan } from '@/store/authStore';
 
 export default function ShipmentListPage() {
   const navigate = useNavigate();
+  const can = useCan();
   const { data = [], isLoading } = shipmentHooks.useList();
   const remove = shipmentHooks.useRemove();
 
@@ -40,9 +43,9 @@ export default function ShipmentListPage() {
         subtitle="All vessels with the contracts they carry"
         breadcrumbs={[{ label: 'Shipment' }, { label: 'List' }]}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/shipments/new')}>
+          <Can module="shipment" action="create"><Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/shipments/new')}>
             New Shipment
-          </Button>
+          </Button></Can>
         }
       />
       <DataGrid
@@ -52,8 +55,8 @@ export default function ShipmentListPage() {
         exportFileName="shipments"
         emptyText="No shipments yet"
         onView={(r) => navigate(`/shipments/${r.id}`)}
-        onEdit={(r) => navigate(`/shipments/${r.id}/edit`)}
-        onDelete={(r) => remove.mutateAsync(r.id)}
+        onEdit={can('shipment', 'edit') ? (r) => navigate(`/shipments/${r.id}/edit`) : undefined}
+        onDelete={can('shipment', 'delete') ? (r) => remove.mutateAsync(r.id) : undefined}
         deleteMessage={(r) => `Shipment for ${r.vesselName} and its BL / CI records will be permanently deleted. The contracts will become unassigned.`}
       />
     </>

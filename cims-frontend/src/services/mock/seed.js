@@ -17,8 +17,8 @@ const sampleFile = (name) => ({
 
 async function seed() {
   repos.users.replaceAll([
-    { id: 'u_admin', userId: 'admin', name: 'System Administrator', role: 'ADMIN', active: true, passwordHash: await hashPassword('admin123'), createdAt: new Date().toISOString() },
-    { id: 'u_demo', userId: 'user', name: 'Commercial Officer', role: 'USER', active: true, passwordHash: await hashPassword('user123'), createdAt: new Date().toISOString() },
+    { id: 'u_admin', userId: 'admin', name: 'System Administrator', role: 'SYSTEM_ADMIN', active: true, password: 'admin123', passwordHash: await hashPassword('admin123'), createdAt: new Date().toISOString() },
+    { id: 'u_demo', userId: 'user', name: 'Commercial Officer', role: 'USER', active: true, password: 'user123', passwordHash: await hashPassword('user123'), createdAt: new Date().toISOString() },
   ]);
 
   const now = new Date().toISOString();
@@ -105,7 +105,12 @@ async function seed() {
 }
 
 export async function ensureSeeded() {
-  if (readJSON('seedVersion', 0) >= SEED_VERSION) return;
+  if (readJSON('seedVersion', 0) >= SEED_VERSION) {
+    // Migration: the original seeded admin becomes the System Administrator.
+    const legacy = repos.users.find('u_admin');
+    if (legacy && legacy.role === 'ADMIN') repos.users.update('u_admin', { role: 'SYSTEM_ADMIN' });
+    return;
+  }
   await seed();
 }
 

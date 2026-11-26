@@ -7,9 +7,12 @@ import DataGrid, { numCol, dateCol } from '@/components/DataGrid';
 import { StatusChip } from '@/components/Common';
 import { contractHooks } from '@/hooks/useApi';
 import { labelOf, PACKAGING } from '@/utils/constants';
+import Can from '@/components/Can';
+import { useCan } from '@/store/authStore';
 
 export default function ContractListPage() {
   const navigate = useNavigate();
+  const can = useCan();
   const { data = [], isLoading } = contractHooks.useList();
   const remove = contractHooks.useRemove();
 
@@ -45,9 +48,9 @@ export default function ContractListPage() {
         subtitle="All sales contracts entered in the system"
         breadcrumbs={[{ label: 'Sales Contract' }, { label: 'List' }]}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/contracts/new')}>
+          <Can module="sales_contract" action="create"><Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/contracts/new')}>
             New Contract
-          </Button>
+          </Button></Can>
         }
       />
       <DataGrid
@@ -57,8 +60,8 @@ export default function ContractListPage() {
         exportFileName="sales-contracts"
         emptyText="No sales contracts yet"
         onView={(r) => navigate(`/contracts/${r.id}`)}
-        onEdit={(r) => navigate(`/contracts/${r.id}/edit`)}
-        onDelete={(r) => remove.mutateAsync(r.id)}
+        onEdit={can('sales_contract', 'edit') ? (r) => navigate(`/contracts/${r.id}/edit`) : undefined}
+        onDelete={can('sales_contract', 'delete') ? (r) => remove.mutateAsync(r.id) : undefined}
         deleteMessage={(r) => `Sales contract ${r.contractNo} and its attachments will be permanently deleted.`}
       />
     </>

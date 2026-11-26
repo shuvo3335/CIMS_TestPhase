@@ -11,6 +11,7 @@ import { FormSkeleton } from '@/components/States';
 import { useConfirm } from '@/components/ConfirmProvider';
 import { useLookups, useUpdateLookups, useSettings, useUpdateSettings } from '@/hooks/useApi';
 import { resetDemoData } from '@/services/api';
+import { useCan, useIsSystemAdmin } from '@/store/authStore';
 
 const GROUPS = [
   { key: 'currencies', label: 'Currencies', hint: 'Used for contract price and LC currency' },
@@ -21,7 +22,7 @@ const GROUPS = [
   { key: 'vesselStatuses', label: 'Vessel Statuses', hint: 'Order here is the order shown in dropdowns' },
 ];
 
-function LookupEditor({ label, hint, values, onChange }) {
+function LookupEditor({ label, hint, values, onChange, readOnly }) {
   const [draft, setDraft] = useState('');
   const add = () => {
     const v = draft.trim();
@@ -31,6 +32,7 @@ function LookupEditor({ label, hint, values, onChange }) {
   };
   return (
     <SectionCard title={label} subtitle={hint}>
+      {!readOnly && (
       <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <TextField
           placeholder={`Add ${label.toLowerCase()}…`}
@@ -47,9 +49,10 @@ function LookupEditor({ label, hint, values, onChange }) {
           Add
         </Button>
       </Stack>
+      )}
       <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
         {values.map((v) => (
-          <Chip key={v} label={v} onDelete={() => onChange(values.filter((x) => x !== v))} variant="outlined" />
+          <Chip key={v} label={v} onDelete={readOnly ? undefined : () => onChange(values.filter((x) => x !== v))} variant="outlined" />
         ))}
       </Box>
     </SectionCard>
@@ -61,6 +64,8 @@ export default function SettingsPage() {
   const { data: settings } = useSettings();
   const saveLookups = useUpdateLookups();
   const saveSettings = useUpdateSettings();
+  const canEdit = useCan()('settings', 'edit');
+  const isSystemAdmin = useIsSystemAdmin();
   const { enqueueSnackbar } = useSnackbar();
   const confirm = useConfirm();
   const qc = useQueryClient();
@@ -106,9 +111,11 @@ export default function SettingsPage() {
         subtitle="Manage dropdown lists and business rules"
         breadcrumbs={[{ label: 'Administration' }, { label: 'Settings' }]}
         actions={
-          <Button variant="contained" startIcon={<SaveOutlinedIcon />} onClick={save}>
-            Save Changes
-          </Button>
+          canEdit && (
+            <Button variant="contained" startIcon={<SaveOutlinedIcon />} onClick={save}>
+              Save Changes
+            </Button>
+          )
         }
       />
       <Stack spacing={3}>
@@ -119,6 +126,7 @@ export default function SettingsPage() {
               type="number"
               value={tolerance}
               onChange={(e) => setTolerance(e.target.value)}
+              disabled={!canEdit}
               helperText="Allowed ± difference between Σ SPI qty and contract qty. 0 = must match exactly."
               slotProps={{ input: { endAdornment: <InputAdornment position="end">%</InputAdornment> }, htmlInput: { min: 0, max: 10, step: 0.1 } }}
             />
@@ -126,9 +134,10 @@ export default function SettingsPage() {
         </SectionCard>
         <Box sx={{ display: 'grid', gap: 3, gridTemplateColumns: { xs: '1fr', lg: '1fr 1fr' } }}>
           {GROUPS.map((g) => (
-            <LookupEditor key={g.key} label={g.label} hint={g.hint} values={draft[g.key] || []} onChange={(v) => setDraft((d) => ({ ...d, [g.key]: v }))} />
+            <LookupEditor key={g.key} readOnly={!canEdit} label={g.label} hint={g.hint} values={draft[g.key] || []} onChange={(v) => setDraft((d) => ({ ...d, [g.key]: v }))} />
           ))}
         </Box>
+        {isSystemAdmin && (
         <SectionCard title="Demo Data">
           <Stack spacing={2} alignItems="flex-start">
             <Alert severity="warning" variant="outlined">
@@ -142,6 +151,7 @@ export default function SettingsPage() {
             </Button>
           </Stack>
         </SectionCard>
+        )}
       </Stack>
     </>
   );

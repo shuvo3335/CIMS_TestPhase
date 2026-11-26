@@ -85,6 +85,7 @@ const STATUS_COLORS = {
   CLOSED: 'default',
   EXPIRED: 'error',
   EXPIRING: 'warning',
+  SYSTEM_ADMIN: 'error',
   ADMIN: 'secondary',
   USER: 'default',
   'Not Start Yet': 'default',

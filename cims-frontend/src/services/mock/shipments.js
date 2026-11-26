@@ -1,4 +1,4 @@
-import { repos, delay, ApiError, eqi } from './core';
+import { repos, delay, ApiError, eqi, assertCan } from './core';
 import { toNum, sumBy } from '@/utils/calc';
 
 const enrich = (s) => ({
@@ -75,17 +75,20 @@ export const shipments = {
     return enrich(s);
   },
   async create(data) {
+    assertCan('shipment', 'create');
     await delay();
     validate(data);
     return enrich(repos.shipments.insert(normalize(data)));
   },
   async update(id, data) {
+    assertCan('shipment', 'edit');
     await delay();
     if (!repos.shipments.find(id)) throw new ApiError('Shipment not found', 404);
     validate(data, id);
     return enrich(repos.shipments.update(id, normalize(data)));
   },
   async remove(id) {
+    assertCan('shipment', 'delete');
     await delay();
     repos.shipments.remove(id);
   },

@@ -9,6 +9,7 @@ import { FormSkeleton, ErrorState } from '@/components/States';
 import { piHooks } from '@/hooks/useApi';
 import { fmtDate, fmtQty, fmtMoney } from '@/utils/format';
 import { labelOf, LC_TYPES } from '@/utils/constants';
+import Can from '@/components/Can';
 
 export default function PIViewPage() {
   const { id } = useParams();
@@ -28,18 +29,18 @@ export default function PIViewPage() {
         actions={
           <>
             {pi.lcCount > 0 && (
-              <Button variant="outlined" startIcon={<AccountBalanceOutlinedIcon />} onClick={() => navigate(`/lc?contract=${pi.contractId}`)}>
+              <Can module="lc" action="view"><Button variant="outlined" startIcon={<AccountBalanceOutlinedIcon />} onClick={() => navigate(`/lc?contract=${pi.contractId}`)}>
                 View LCs ({pi.lcCount})
-              </Button>
+              </Button></Can>
             )}
             {pendingLc > 0 && (
-              <Button variant="outlined" color="secondary" startIcon={<AccountBalanceOutlinedIcon />} onClick={() => navigate(`/lc/new?contract=${pi.contractId}`)}>
+              <Can module="lc" action="create"><Button variant="outlined" color="secondary" startIcon={<AccountBalanceOutlinedIcon />} onClick={() => navigate(`/lc/new?contract=${pi.contractId}`)}>
                 Open LC ({pendingLc} pending)
-              </Button>
+              </Button></Can>
             )}
-            <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/pi/${id}/edit`)}>
+            <Can module="pi" action="edit"><Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/pi/${id}/edit`)}>
               Edit
-            </Button>
+            </Button></Can>
           </>
         }
       />

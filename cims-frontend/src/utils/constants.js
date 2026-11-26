@@ -1,4 +1,5 @@
-export const ROLES = { ADMIN: 'ADMIN', USER: 'USER' };
+export const ROLES = { SYSTEM_ADMIN: 'SYSTEM_ADMIN', ADMIN: 'ADMIN', USER: 'USER' };
+export const ROLE_LABELS = { SYSTEM_ADMIN: 'System Administrator', ADMIN: 'Admin', USER: 'User' };
 
 export const PACKAGING = [
   { value: 'BULK', label: 'Bulk' },

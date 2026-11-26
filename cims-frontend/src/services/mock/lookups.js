@@ -1,5 +1,5 @@
 import { readJSON, writeJSON } from '../storage';
-import { delay } from './core';
+import { delay, assertCan } from './core';
 
 export const DEFAULT_LOOKUPS = {
   currencies: ['USD', 'EUR', 'GBP', 'BDT', 'CNY', 'JPY', 'AED', 'SGD'],
@@ -40,6 +40,7 @@ export const lookups = {
     return { ...DEFAULT_LOOKUPS, ...readJSON('lookups', {}) };
   },
   async update(data) {
+    assertCan('settings', 'edit');
     await delay();
     writeJSON('lookups', data);
     return data;
@@ -55,6 +56,7 @@ export const settings = {
     return { ...DEFAULT_SETTINGS, ...readJSON('settings', {}) };
   },
   async update(data) {
+    assertCan('settings', 'edit');
     await delay();
     writeJSON('settings', data);
     return data;

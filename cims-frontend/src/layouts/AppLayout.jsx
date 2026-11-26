@@ -14,8 +14,11 @@ import ExpandMore from '@mui/icons-material/ExpandMore';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useUiStore } from '@/store/uiStore';
 import { useAuthStore } from '@/store/authStore';
+import { ROLE_LABELS } from '@/utils/constants';
+import { can } from '@/utils/permissions';
 import { useQueryClient } from '@tanstack/react-query';
 import { NAV } from './navConfig';
+import { api } from '@/services/api';
 import { BRAND } from '@/theme/theme';
 
 const FULL = 264;
@@ -42,7 +45,9 @@ function Logo({ collapsed }) {
 function NavContent({ collapsed, onNavigate, onExpand }) {
   const { pathname } = useLocation();
   const role = useAuthStore((s) => s.user?.role);
-  const items = NAV.filter((n) => !n.role || n.role === role);
+  const user = useAuthStore((s) => s.user);
+  const allowed = (n) => (!n.roles || n.roles.includes(role)) && (!n.module || can(user, n.module, n.action || 'view'));
+  const items = NAV.map((n) => (n.children ? { ...n, children: n.children.filter((c) => allowed({ module: n.module, ...c })) } : n)).filter((n) => allowed(n) && (!n.children || n.children.length > 0));
   const activeGroup = items.find((n) => n.match && pathname.startsWith(n.match))?.id;
   const [open, setOpen] = useState(() => ({ [activeGroup]: true }));
 
@@ -132,7 +137,22 @@ export default function AppLayout() {
   const { user, logout } = useAuthStore();
   const qc = useQueryClient();
   const navigate = useNavigate();
+  const setUser = useAuthStore((s) => s.setUser);
   const [anchor, setAnchor] = useState(null);
+
+  // Pick up permission changes made by the System Administrator since this session started.
+  const userId = user?.id;
+  useEffect(() => {
+    if (!userId) return;
+    api.auth
+      .me(userId)
+      .then(setUser)
+      .catch(() => {
+        logout();
+        navigate('/login', { replace: true });
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
 
   const collapsed = !isMobile && drawerCollapsed;
   const width = isMobile ? 0 : collapsed ? MINI : FULL;
@@ -181,7 +201,7 @@ export default function AppLayout() {
                 {user?.name}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {user?.role === 'ADMIN' ? 'Administrator' : 'User'}
+                {ROLE_LABELS[user?.role] ?? 'User'}
               </Typography>
             </Box>
             <Avatar sx={{ width: 36, height: 36, bgcolor: 'secondary.main', fontSize: 14, fontWeight: 700 }}>{initials}</Avatar>
@@ -193,7 +213,7 @@ export default function AppLayout() {
                 <Typography variant="caption" color="text.secondary">
                   @{user?.userId}
                 </Typography>
-                <Chip size="small" label={user?.role} color={user?.role === 'ADMIN' ? 'secondary' : 'default'} sx={{ height: 18, fontSize: 10 }} />
+                <Chip size="small" label={user?.role?.replace('_', ' ')} color={user?.role === 'SYSTEM_ADMIN' ? 'error' : user?.role === 'ADMIN' ? 'secondary' : 'default'} sx={{ height: 18, fontSize: 10 }} />
               </Stack>
             </Box>
             <Divider />

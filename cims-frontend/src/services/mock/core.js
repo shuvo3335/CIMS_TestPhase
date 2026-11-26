@@ -1,4 +1,7 @@
 import { readJSON, writeJSON, uid } from '../storage';
+import { useAuthStore } from '@/store/authStore';
+import { can } from '@/utils/permissions';
+import { ROLES } from '@/utils/constants';
 
 export class ApiError extends Error {
   constructor(message, status = 400, field) {
@@ -54,3 +57,16 @@ export const repos = {
 };
 
 export const eqi = (a, b) => String(a ?? '').trim().toLowerCase() === String(b ?? '').trim().toLowerCase();
+
+/** Server-side style guard (mock): rejects actions the signed-in user has no permission for. */
+export function assertCan(moduleKey, action) {
+  if (!can(useAuthStore.getState().user, moduleKey, action)) {
+    throw new ApiError('You do not have permission to perform this action', 403);
+  }
+}
+
+export function assertSystemAdmin() {
+  if (useAuthStore.getState().user?.role !== ROLES.SYSTEM_ADMIN) {
+    throw new ApiError('Only the System Administrator can manage users', 403);
+  }
+}

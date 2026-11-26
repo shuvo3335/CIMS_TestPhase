@@ -112,7 +112,7 @@ export default function LoginPage() {
                   {methods.formState.isSubmitting ? 'Signing in…' : 'Sign in'}
                 </Button>
                 <Alert severity="info" variant="outlined" sx={{ fontSize: 13 }}>
-                  Demo accounts: <b>admin / admin123</b> (Admin) · <b>user / user123</b> (User)
+                  Demo accounts: <b>admin / admin123</b> (System Admin) · <b>user / user123</b> (User)
                 </Alert>
               </Stack>
             </FormProvider>

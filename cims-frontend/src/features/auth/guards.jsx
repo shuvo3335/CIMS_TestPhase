@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
+import { can } from '@/utils/permissions';
 import { EmptyState } from '@/components/States';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 
@@ -16,14 +17,29 @@ export function GuestRoute({ children }) {
   return children;
 }
 
-export function RoleGuard({ role }) {
+export function RoleGuard({ roles }) {
   const user = useAuthStore((s) => s.user);
-  if (user?.role !== role) {
+  if (!roles.includes(user?.role)) {
     return (
       <EmptyState
         icon={<LockOutlinedIcon />}
         title="Access denied"
         message="You don't have permission to view this page. Contact your administrator if you need access."
+      />
+    );
+  }
+  return <Outlet />;
+}
+
+/** Route guard driven by the permission registry: `<PermissionGuard module="lc" action="create" />` */
+export function PermissionGuard({ module, action = 'view' }) {
+  const user = useAuthStore((s) => s.user);
+  if (!can(user, module, action)) {
+    return (
+      <EmptyState
+        icon={<LockOutlinedIcon />}
+        title="Access denied"
+        message="You don't have permission to view this page. Contact your System Administrator if you need access."
       />
     );
   }

@@ -10,6 +10,7 @@ import { lcHooks, contractHooks } from '@/hooks/useApi';
 import { fmtDate, fmtQty, fmtMoney, ordinal } from '@/utils/format';
 import { latestLcValue, lcStatus } from '@/utils/calc';
 import { labelOf, LC_TYPES } from '@/utils/constants';
+import Can from '@/components/Can';
 
 const STATUS_LABEL = { ACTIVE: 'Active', EXPIRING: 'Expiring soon', EXPIRED: 'Expired' };
 
@@ -33,17 +34,17 @@ export default function LCViewPage() {
         actions={
           <>
             {shipmentId ? (
-              <Button variant="outlined" startIcon={<DirectionsBoatOutlinedIcon />} onClick={() => navigate(`/shipments/${shipmentId}`)}>
+              <Can module="shipment" action="view"><Button variant="outlined" startIcon={<DirectionsBoatOutlinedIcon />} onClick={() => navigate(`/shipments/${shipmentId}`)}>
                 View Shipment
-              </Button>
+              </Button></Can>
             ) : (
-              <Button variant="outlined" color="secondary" startIcon={<DirectionsBoatOutlinedIcon />} onClick={() => navigate(`/shipments/new?contract=${lc.contractId}`)}>
+              <Can module="shipment" action="create"><Button variant="outlined" color="secondary" startIcon={<DirectionsBoatOutlinedIcon />} onClick={() => navigate(`/shipments/new?contract=${lc.contractId}`)}>
                 Create Shipment
-              </Button>
+              </Button></Can>
             )}
-            <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/lc/${id}/edit`)}>
+            <Can module="lc" action="edit"><Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/lc/${id}/edit`)}>
               Edit
-            </Button>
+            </Button></Can>
           </>
         }
       />

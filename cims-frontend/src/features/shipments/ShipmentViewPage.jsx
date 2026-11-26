@@ -10,6 +10,7 @@ import { shipmentHooks, piHooks } from '@/hooks/useApi';
 import { fmtDate, fmtQty, fmtMoney } from '@/utils/format';
 import { sumBy } from '@/utils/calc';
 import { labelOf, LOI_OPTIONS, DOC_ACCEPTANCE_OPTIONS } from '@/utils/constants';
+import Can from '@/components/Can';
 
 export default function ShipmentViewPage() {
   const { id } = useParams();
@@ -28,12 +29,12 @@ export default function ShipmentViewPage() {
         breadcrumbs={[{ label: 'Shipment', to: '/shipments' }, { label: s.vesselName }]}
         actions={
           <>
-            <Button variant="outlined" startIcon={<AssessmentOutlinedIcon />} onClick={() => navigate(`/reports/vessels/${id}`)}>
+            <Can module="reports" action="view"><Button variant="outlined" startIcon={<AssessmentOutlinedIcon />} onClick={() => navigate(`/reports/vessels/${id}`)}>
               Vessel Report
-            </Button>
-            <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/shipments/${id}/edit`)}>
+            </Button></Can>
+            <Can module="shipment" action="edit"><Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/shipments/${id}/edit`)}>
               Edit
-            </Button>
+            </Button></Can>
           </>
         }
       />

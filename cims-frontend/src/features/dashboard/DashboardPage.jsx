@@ -14,6 +14,8 @@ import { contractHooks, lcHooks, piHooks, shipmentHooks, useVesselReport, useLoo
 import { useAuthStore } from '@/store/authStore';
 import { lcStatus, sumBy, calcLcPending } from '@/utils/calc';
 import { fmtDate, fmtQty } from '@/utils/format';
+import Can from '@/components/Can';
+import { useCan } from '@/store/authStore';
 
 function Kpi({ icon, label, value, hint, color = 'primary', loading, onClick }) {
   return (
@@ -40,6 +42,7 @@ function Kpi({ icon, label, value, hint, color = 'primary', loading, onClick }) 
 
 export default function DashboardPage() {
   const navigate = useNavigate();
+  const can = useCan();
   const user = useAuthStore((s) => s.user);
   const contracts = contractHooks.useList();
   const pis = piHooks.useList();
@@ -85,21 +88,21 @@ export default function DashboardPage() {
         subtitle="Overview of contracts, LCs and vessels in transit"
         actions={
           <>
-            <Button variant="outlined" startIcon={<AddIcon />} onClick={() => navigate('/contracts/new')}>
+            <Can module="sales_contract" action="create"><Button variant="outlined" startIcon={<AddIcon />} onClick={() => navigate('/contracts/new')}>
               New Contract
-            </Button>
-            <Button variant="contained" onClick={() => navigate('/reports/vessels')}>
+            </Button></Can>
+            <Can module="reports" action="view"><Button variant="contained" onClick={() => navigate('/reports/vessels')}>
               Vessel Report
-            </Button>
+            </Button></Can>
           </>
         }
       />
 
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr', lg: 'repeat(5, 1fr)' }, mb: 3 }}>
-        <Kpi icon={<DescriptionOutlinedIcon />} label="Active Contracts" value={stats.activeContracts} loading={loading} hint={`${stats.contractsWithoutPi} awaiting PI`} onClick={() => navigate('/contracts')} />
-        <Kpi icon={<AccountBalanceOutlinedIcon />} label="Open LCs" value={stats.openLcs} color="secondary" loading={loading} hint={`${stats.lcsPendingSpis} SPI(s) awaiting LC`} onClick={() => navigate('/lc')} />
-        <Kpi icon={<EventBusyOutlinedIcon />} label="LCs Expiring ≤ 15 days" value={stats.expiring.length} color="warning" loading={loading} onClick={() => navigate('/lc')} />
-        <Kpi icon={<DirectionsBoatOutlinedIcon />} label="Vessels" value={totalVessels} color="info" loading={shipments.isLoading} onClick={() => navigate('/shipments')} />
+        <Kpi icon={<DescriptionOutlinedIcon />} label="Active Contracts" value={stats.activeContracts} loading={loading} hint={`${stats.contractsWithoutPi} awaiting PI`} onClick={can('sales_contract', 'view') ? () => navigate('/contracts') : undefined} />
+        <Kpi icon={<AccountBalanceOutlinedIcon />} label="Open LCs" value={stats.openLcs} color="secondary" loading={loading} hint={`${stats.lcsPendingSpis} SPI(s) awaiting LC`} onClick={can('lc', 'view') ? () => navigate('/lc') : undefined} />
+        <Kpi icon={<EventBusyOutlinedIcon />} label="LCs Expiring ≤ 15 days" value={stats.expiring.length} color="warning" loading={loading} onClick={can('lc', 'view') ? () => navigate('/lc') : undefined} />
+        <Kpi icon={<DirectionsBoatOutlinedIcon />} label="Vessels" value={totalVessels} color="info" loading={shipments.isLoading} onClick={can('shipment', 'view') ? () => navigate('/shipments') : undefined} />
         <Kpi icon={<PendingActionsOutlinedIcon />} label="LC Pending Qty" value={fmtQty(stats.pendingQty)} color="error" loading={loading} hint="Across active contracts" />
       </Box>
 
@@ -128,7 +131,7 @@ export default function DashboardPage() {
           ) : (
             <List dense disablePadding>
               {upcoming.map((s) => (
-                <ListItemButton key={s.id} onClick={() => navigate(`/reports/vessels/${s.id}`)} sx={{ borderRadius: 2 }}>
+                <ListItemButton key={s.id} onClick={can('reports', 'view') ? () => navigate(`/reports/vessels/${s.id}`) : undefined} sx={{ borderRadius: 2 }}>
                   <ListItemText primary={s.vesselName} secondary={`${s.commodities.join(', ')} · ETA ${fmtDate(s.eta)}`} slotProps={{ primary: { fontWeight: 650 } }} />
                   <StatusChip value={s.status} />
                 </ListItemButton>
@@ -143,7 +146,7 @@ export default function DashboardPage() {
           ) : (
             <List dense disablePadding>
               {stats.expiring.slice(0, 6).map((l) => (
-                <ListItemButton key={l.id} onClick={() => navigate(`/lc/${l.id}`)} sx={{ borderRadius: 2 }}>
+                <ListItemButton key={l.id} onClick={can('lc', 'view') ? () => navigate(`/lc/${l.id}`) : undefined} sx={{ borderRadius: 2 }}>
                   <ListItemText primary={l.lcNo} secondary={`${l.bank} · ${l.contractNo}`} slotProps={{ primary: { fontWeight: 650 } }} />
                   <Typography variant="caption" color="warning.main" fontWeight={700}>
                     {fmtDate(l.expiryDate)}

@@ -1,4 +1,4 @@
-import { repos, delay, ApiError, eqi } from './core';
+import { repos, delay, ApiError, eqi, assertCan } from './core';
 import { calcTotalPrice, toNum } from '@/utils/calc';
 import { useAuthStore } from '@/store/authStore';
 
@@ -44,12 +44,14 @@ export const contracts = {
     return enrich(c);
   },
   async create(data) {
+    assertCan('sales_contract', 'create');
     await delay();
     assertUnique(data.contractNo);
     const user = useAuthStore.getState().user;
     return enrich(repos.contracts.insert({ ...normalize(data), createdById: user?.id ?? null, createdByName: user?.name ?? null }));
   },
   async update(id, data) {
+    assertCan('sales_contract', 'edit');
     await delay();
     const current = repos.contracts.find(id);
     if (!current) throw new ApiError('Sales contract not found', 404);
@@ -65,6 +67,7 @@ export const contracts = {
     return enrich(repos.contracts.update(id, next));
   },
   async remove(id) {
+    assertCan('sales_contract', 'delete');
     await delay();
     if (findPi(id)) throw new ApiError('This contract has a PI. Delete the PI first.', 409);
     if (findShipment(id)) throw new ApiError('This contract is linked to a vessel/shipment. Remove it there first.', 409);

@@ -1,4 +1,4 @@
-import { repos, delay, ApiError, eqi } from './core';
+import { repos, delay, ApiError, eqi, assertCan } from './core';
 import { toNum, maxWithTolerance } from '@/utils/calc';
 import { fmtQty } from '@/utils/format';
 
@@ -90,6 +90,7 @@ export const lcs = {
   },
   /** Open several LCs (one per SPI) against one contract in a single save. */
   async createMany(header, items) {
+    assertCan('lc', 'create');
     await delay();
     if (!items?.length) throw new ApiError('Add at least one LC');
     const spiIds = items.map((i) => i.spiId);
@@ -103,12 +104,14 @@ export const lcs = {
     return rows.map((r) => enrich(repos.lcs.insert(r)));
   },
   async update(id, header, item) {
+    assertCan('lc', 'edit');
     await delay();
     if (!repos.lcs.find(id)) throw new ApiError('LC not found', 404);
     const { pi } = validateLc(header, item, id);
     return enrich(repos.lcs.update(id, build(header, item, pi)));
   },
   async remove(id) {
+    assertCan('lc', 'delete');
     await delay();
     repos.lcs.remove(id);
   },

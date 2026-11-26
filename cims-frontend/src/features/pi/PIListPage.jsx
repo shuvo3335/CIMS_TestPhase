@@ -19,6 +19,7 @@ import { useConfirm } from '@/components/ConfirmProvider';
 import { piHooks } from '@/hooks/useApi';
 import { fmtDate, fmtQty, fmtMoney } from '@/utils/format';
 import { labelOf, LC_TYPES } from '@/utils/constants';
+import Can from '@/components/Can';
 
 /** One row per sales contract (with its PI); expand to see every SPI with all its details. */
 export default function PIListPage() {
@@ -69,9 +70,9 @@ export default function PIListPage() {
         subtitle="Proforma invoices grouped by sales contract. Click a contract to see all of its SPIs."
         breadcrumbs={[{ label: 'Proforma Invoice' }, { label: 'List' }]}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/pi/new')}>
+          <Can module="pi" action="create"><Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/pi/new')}>
             New PI
-          </Button>
+          </Button></Can>
         }
       />
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
@@ -148,8 +149,8 @@ export default function PIListPage() {
                         </TableCell>
                         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
                           <Tooltip title="View PI"><IconButton size="small" onClick={() => navigate(`/pi/${pi.id}`)}><VisibilityOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                          <Tooltip title="Edit PI"><IconButton size="small" onClick={() => navigate(`/pi/${pi.id}/edit`)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                          <Tooltip title="Delete PI"><IconButton size="small" color="error" onClick={() => onDelete(pi)}><DeleteOutlineIcon fontSize="small" /></IconButton></Tooltip>
+                          <Can module="pi" action="edit"><Tooltip title="Edit PI"><IconButton size="small" onClick={() => navigate(`/pi/${pi.id}/edit`)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip></Can>
+                          <Can module="pi" action="delete"><Tooltip title="Delete PI"><IconButton size="small" color="error" onClick={() => onDelete(pi)}><DeleteOutlineIcon fontSize="small" /></IconButton></Tooltip></Can>
                         </TableCell>
                       </TableRow>
                       <TableRow>
@@ -202,8 +203,8 @@ export default function PIListPage() {
                                         </TableCell>
                                         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }} onClick={(e) => e.stopPropagation()}>
                           <Tooltip title="View PI"><IconButton size="small" onClick={() => navigate(`/pi/${pi.id}`)}><VisibilityOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                          <Tooltip title="Edit PI"><IconButton size="small" onClick={() => navigate(`/pi/${pi.id}/edit`)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                          <Tooltip title="Delete PI"><IconButton size="small" color="error" onClick={() => onDelete(pi)}><DeleteOutlineIcon fontSize="small" /></IconButton></Tooltip>
+                          <Can module="pi" action="edit"><Tooltip title="Edit PI"><IconButton size="small" onClick={() => navigate(`/pi/${pi.id}/edit`)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip></Can>
+                          <Can module="pi" action="delete"><Tooltip title="Delete PI"><IconButton size="small" color="error" onClick={() => onDelete(pi)}><DeleteOutlineIcon fontSize="small" /></IconButton></Tooltip></Can>
                         </TableCell>
                                       </TableRow>
                                     ))}

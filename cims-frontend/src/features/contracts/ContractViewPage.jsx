@@ -9,6 +9,7 @@ import { FormSkeleton, ErrorState } from '@/components/States';
 import { contractHooks } from '@/hooks/useApi';
 import { fmtDate, fmtQty, fmtMoney } from '@/utils/format';
 import { labelOf, PACKAGING } from '@/utils/constants';
+import Can from '@/components/Can';
 
 export default function ContractViewPage() {
   const { id } = useParams();
@@ -27,19 +28,19 @@ export default function ContractViewPage() {
         actions={
           <>
             {c.piId ? (
-              <Button variant="outlined" startIcon={<ReceiptLongOutlinedIcon />} onClick={() => navigate(`/pi/${c.piId}`)}>
+              <Can module="pi" action="view"><Button variant="outlined" startIcon={<ReceiptLongOutlinedIcon />} onClick={() => navigate(`/pi/${c.piId}`)}>
                 View PI {c.piNo}
-              </Button>
+              </Button></Can>
             ) : (
               c.status === 'ACTIVE' && (
-                <Button variant="outlined" color="secondary" startIcon={<ReceiptLongOutlinedIcon />} onClick={() => navigate(`/pi/new?contract=${c.id}`)}>
+                <Can module="pi" action="create"><Button variant="outlined" color="secondary" startIcon={<ReceiptLongOutlinedIcon />} onClick={() => navigate(`/pi/new?contract=${c.id}`)}>
                   Open PI
-                </Button>
+                </Button></Can>
               )
             )}
-            <Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/contracts/${id}/edit`)}>
+            <Can module="sales_contract" action="edit"><Button variant="contained" startIcon={<EditOutlinedIcon />} onClick={() => navigate(`/contracts/${id}/edit`)}>
               Edit
-            </Button>
+            </Button></Can>
           </>
         }
       />

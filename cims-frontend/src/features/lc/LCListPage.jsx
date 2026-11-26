@@ -20,6 +20,7 @@ import { lcHooks, contractHooks, piHooks } from '@/hooks/useApi';
 import { latestLcValue, lcStatus, toNum, round2 } from '@/utils/calc';
 import { fmtDate, fmtQty, fmtMoney } from '@/utils/format';
 import { labelOf, LC_TYPES } from '@/utils/constants';
+import Can from '@/components/Can';
 
 const STATUS_LABEL = { ACTIVE: 'Active', EXPIRING: 'Expiring soon', EXPIRED: 'Expired' };
 
@@ -101,9 +102,9 @@ export default function LCListPage() {
         subtitle="Letters of credit grouped by sales contract. Click a contract to see its LCs."
         breadcrumbs={[{ label: 'Letter of Credit' }, { label: 'List' }]}
         actions={
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/lc/new')}>
+          <Can module="lc" action="create"><Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/lc/new')}>
             Open LC
-          </Button>
+          </Button></Can>
         }
       />
       <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
@@ -174,7 +175,7 @@ export default function LCListPage() {
                                   {g.pendingSpis} SPI(s) pending
                                 </Typography>
                               </Box>
-                              <Button
+                              <Can module="lc" action="create"><Button
                                 size="small"
                                 variant="outlined"
                                 color="secondary"
@@ -185,7 +186,7 @@ export default function LCListPage() {
                                 }}
                               >
                                 Open LC
-                              </Button>
+                              </Button></Can>
                             </Stack>
                           ) : (
                             <Typography variant="body2" color="text.secondary">
@@ -236,8 +237,8 @@ export default function LCListPage() {
                                         <TableCell><StatusChip value={l.status} label={STATUS_LABEL[l.status]} /></TableCell>
                                         <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
                                           <Tooltip title="View"><IconButton size="small" onClick={() => navigate(`/lc/${l.id}`)}><VisibilityOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                                          <Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/lc/${l.id}/edit`)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip>
-                                          <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => onDelete(l)}><DeleteOutlineIcon fontSize="small" /></IconButton></Tooltip>
+                                          <Can module="lc" action="edit"><Tooltip title="Edit"><IconButton size="small" onClick={() => navigate(`/lc/${l.id}/edit`)}><EditOutlinedIcon fontSize="small" /></IconButton></Tooltip></Can>
+                                          <Can module="lc" action="delete"><Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => onDelete(l)}><DeleteOutlineIcon fontSize="small" /></IconButton></Tooltip></Can>
                                         </TableCell>
                                       </TableRow>
                                     ))}
