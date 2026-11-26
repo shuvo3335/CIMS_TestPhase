@@ -56,7 +56,7 @@ export function RHFText({ name, label, options, type = 'text', required, startAd
 }
 
 /** Searchable select (Autocomplete) storing just the option value. */
-export function RHFAutocomplete({ name, label, options, required, disabled, onValueChange, helperText, getOptionDisabled }) {
+export function RHFAutocomplete({ name, label, options, required, disabled, onValueChange, helperText, getOptionDisabled, onCreate }) {
   const { control, formState } = useFormContext();
   const err = getError(formState.errors, name);
   const opts = options.map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
@@ -69,8 +69,30 @@ export function RHFAutocomplete({ name, label, options, required, disabled, onVa
         <Autocomplete
           options={opts}
           disabled={disabled}
-          value={opts.find((o) => o.value === field.value) || null}
-          onChange={(_, o) => {
+          // With onCreate, a just-added value can briefly be missing from `options` while the list refreshes.
+          value={opts.find((o) => o.value === field.value) || (onCreate && field.value ? { value: field.value, label: field.value } : null)}
+          filterOptions={
+            onCreate
+              ? (all, state) => {
+                  const typed = state.inputValue.trim();
+                  const matches = all.filter((o) => o.label.toLowerCase().includes(typed.toLowerCase()));
+                  const exact = all.some((o) => o.label.toLowerCase() === typed.toLowerCase());
+                  return typed && !exact ? [...matches, { value: typed, label: `Add "${typed}"`, isNew: true }] : matches;
+                }
+              : undefined
+          }
+          onChange={async (_, o) => {
+            if (o?.isNew) {
+              const name = o.value;
+              try {
+                await onCreate(name);
+              } catch {
+                return; // creation failed; leave the field unchanged
+              }
+              field.onChange(name);
+              onValueChange?.(name);
+              return;
+            }
             field.onChange(o?.value ?? '');
             onValueChange?.(o?.value ?? '');
           }}

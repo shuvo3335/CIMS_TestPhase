@@ -19,7 +19,8 @@ import { RHFFileUploader } from '@/components/FileUploader';
 import QtySummaryBar from '@/components/QtySummaryBar';
 import { FormSkeleton, ErrorState, EmptyState } from '@/components/States';
 import { useConfirm } from '@/components/ConfirmProvider';
-import { contractHooks, piHooks, useLookups, useSettings } from '@/hooks/useApi';
+import { useSnackbar } from 'notistack';
+import { contractHooks, piHooks, useLookups, useSettings, useUpdateLookups } from '@/hooks/useApi';
 import { useSubmit } from '@/hooks/useSubmit';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { checkSpiTotal, calcSpiAmount, sumBy, toNum, round2 } from '@/utils/calc';
@@ -38,7 +39,23 @@ export default function PIFormPage() {
   const { data: contracts = [], isLoading: loadingContracts } = contractHooks.useList();
   const { data: lookups } = useLookups();
   const { data: settings } = useSettings();
+  const updateLookups = useUpdateLookups();
+  const { enqueueSnackbar } = useSnackbar();
   const existing = piHooks.useOne(id);
+
+  // Save a newly typed port into the shared port list so it can be picked in future PIs.
+  const addPort = async (name) => {
+    const port = name.trim();
+    const ports = lookups?.ports ?? [];
+    if (ports.some((p) => p.toLowerCase() === port.toLowerCase())) return;
+    try {
+      await updateLookups.mutateAsync({ ...lookups, ports: [...ports, port] });
+      enqueueSnackbar(`Port "${port}" added to the list`, { variant: 'success' });
+    } catch (e) {
+      enqueueSnackbar(e.message || 'Could not add port', { variant: 'error' });
+      throw e;
+    }
+  };
   const create = piHooks.useCreate();
   const update = piHooks.useUpdate();
   const tolerance = settings?.spiTolerancePct ?? 0;
@@ -156,8 +173,8 @@ export default function PIFormPage() {
                 <RHFText name="spiDate" label="PI Date" type="date" required />
                 <RHFText name="spiValidity" label="PI Validity" type="date" required />
                 <RHFText name="unitPrice" label="PI Unit Price" type="number" required endAdornment={contract?.currency} />
-                <RHFAutocomplete name="pol" label="Port of Loading (PoL)" options={lookups?.ports ?? []} required />
-                <RHFAutocomplete name="pod" label="Port of Discharge (PoD)" options={lookups?.ports ?? []} required />
+                <RHFAutocomplete name="pol" label="Port of Loading (PoL)" options={lookups?.ports ?? []} onCreate={addPort} helperText="Not listed? Type the port name and choose “Add”." required />
+                <RHFAutocomplete name="pod" label="Port of Discharge (PoD)" options={lookups?.ports ?? []} onCreate={addPort} required />
               </FormGrid>
             </SectionCard>
 
