@@ -104,7 +104,6 @@ export default function ShipmentFormPage() {
                 <RHFText name="demurrageRate" label="Demurrage Rate" type="number" endAdornment="USD/day" />
                 <RHFText name="status" label="Vessel Status" options={lookups?.vesselStatuses ?? []} required />
                 <RHFText name="etc" label="Estimated Completion (ETC)" type="date" />
-                <RHFText name="spd" label="Shipping Date" type="date" />
                 <RHFText name="sld" label="Sailing Date" type="date" />
                 <RHFText name="eta" label="Estimated Arrival (ETA)" type="date" required />
               </FormGrid>

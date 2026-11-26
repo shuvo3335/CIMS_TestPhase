@@ -97,7 +97,7 @@ async function seed() {
     ...stamp,
   };
 
-  repos.contracts.replaceAll([c1, c2, c3]);
+  repos.contracts.replaceAll([c1, c2, c3].map((c) => ({ ...c, createdById: 'u_demo', createdByName: 'Commercial Officer' })));
   repos.pis.replaceAll([pi1, pi2]);
   repos.lcs.replaceAll([...lcs1, ...lcs2]);
   repos.shipments.replaceAll([shipment]);

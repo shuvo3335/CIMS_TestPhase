@@ -1,5 +1,6 @@
 import { repos, delay, ApiError, eqi } from './core';
 import { calcTotalPrice, toNum } from '@/utils/calc';
+import { useAuthStore } from '@/store/authStore';
 
 const findPi = (contractId) => repos.pis.filter((p) => p.contractId === contractId)[0];
 const findShipment = (contractId) =>
@@ -45,7 +46,8 @@ export const contracts = {
   async create(data) {
     await delay();
     assertUnique(data.contractNo);
-    return enrich(repos.contracts.insert(normalize(data)));
+    const user = useAuthStore.getState().user;
+    return enrich(repos.contracts.insert({ ...normalize(data), createdById: user?.id ?? null, createdByName: user?.name ?? null }));
   },
   async update(id, data) {
     await delay();

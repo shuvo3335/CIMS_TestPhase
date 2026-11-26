@@ -15,6 +15,7 @@ import { labelOf, LOI_OPTIONS, DOC_ACCEPTANCE_OPTIONS } from '@/utils/constants'
 export const reportColumns = [
   { field: 'vesselName', headerName: 'Vessel Name', pinned: 'left', minWidth: 170, valueFormatter: (p) => (p.data?.__total ? p.value : p.value || 'Not Assigned') },
   { field: 'contractNo', headerName: 'Contract No', minWidth: 160 },
+  { field: 'createdByName', headerName: 'Created By', minWidth: 160, valueFormatter: (p) => (p.data?.__total ? '' : p.value || '—') },
   { field: 'commodity', headerName: 'Commodity Name', minWidth: 180 },
   { field: 'vesselStatus', headerName: 'Vessel Status', minWidth: 150, cellRenderer: (p) => (p.data?.__total ? '' : <StatusChip value={p.value} />) },
   {
