@@ -64,6 +64,10 @@ export const router = createBrowserRouter([
         view: () => import('@/features/lc/LCViewPage'),
         form: () => import('@/features/lc/LCFormPage'),
       }),
+      {
+        element: <PermissionGuard module="lc" action="view" />,
+        children: [{ path: 'lc/contract/:contractId', element: page(() => import('@/features/lc/LCContractViewPage')) }],
+      },
       crud('shipments', 'shipment', {
         list: () => import('@/features/shipments/ShipmentListPage'),
         view: () => import('@/features/shipments/ShipmentViewPage'),

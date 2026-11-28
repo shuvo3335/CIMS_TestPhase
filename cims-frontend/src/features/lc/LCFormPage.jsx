@@ -163,7 +163,8 @@ export default function LCFormPage() {
         success: isEdit ? 'LC updated' : `${values.lcs.length} LC(s) opened`,
         onSuccess: (saved) => {
           release();
-          navigate(isEdit ? `/lc/${id}` : saved.length === 1 ? `/lc/${saved[0].id}` : '/lc');
+          // After opening LCs, land on the contract's LC details page (with the "Create Shipment" action).
+          navigate(isEdit ? `/lc/${id}` : `/lc/contract/${saved[0].contractId}`);
         },
       },
     );
