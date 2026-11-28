@@ -5,7 +5,6 @@ export const piSchema = z
   .object({
     contractId: reqStr('Sales contract'),
     piNo: reqStr('PI No', 60),
-    lcType: z.enum(['SIGHT', 'UPAS'], { required_error: 'LC type is required', invalid_type_error: 'LC type is required' }),
     spiDate: reqDate('SPI date'),
     spiValidity: reqDate('SPI validity'),
     unitPrice: reqNum('SPI unit price'),
@@ -39,7 +38,6 @@ export const piSchema = z
 export const piDefaults = {
   contractId: '',
   piNo: '',
-  lcType: '',
   spiDate: new Date().toISOString().slice(0, 10),
   spiValidity: '',
   unitPrice: '',
@@ -52,7 +50,6 @@ export const piDefaults = {
 export const toFormValues = (pi) => ({
   contractId: pi.contractId,
   piNo: pi.piNo,
-  lcType: pi.lcType,
   spiDate: pi.spiDate,
   spiValidity: pi.spiValidity,
   unitPrice: String(pi.unitPrice),

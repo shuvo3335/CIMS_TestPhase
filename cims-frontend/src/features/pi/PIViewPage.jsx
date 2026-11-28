@@ -8,7 +8,6 @@ import { FileList } from '@/components/FileUploader';
 import { FormSkeleton, ErrorState } from '@/components/States';
 import { piHooks } from '@/hooks/useApi';
 import { fmtDate, fmtQty, fmtMoney } from '@/utils/format';
-import { labelOf, LC_TYPES } from '@/utils/constants';
 import Can from '@/components/Can';
 
 export default function PIViewPage() {
@@ -57,7 +56,6 @@ export default function PIViewPage() {
               { label: 'Origin', value: pi.origin },
               { label: 'Contract Qty', value: fmtQty(pi.contractQty, pi.unit) },
               { label: 'SPI Unit Price', value: fmtMoney(pi.unitPrice, pi.currency) },
-              { label: 'LC Type', value: labelOf(LC_TYPES, pi.lcType) },
               { label: 'SPI Date', value: fmtDate(pi.spiDate) },
               { label: 'SPI Validity', value: fmtDate(pi.spiValidity) },
               { label: 'Total SPI Amount', value: fmtMoney(pi.totalSpiAmount, pi.currency), emphasize: true },

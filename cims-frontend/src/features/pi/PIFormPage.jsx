@@ -25,7 +25,6 @@ import { useSubmit } from '@/hooks/useSubmit';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { checkSpiTotal, calcSpiAmount, sumBy, toNum, round2 } from '@/utils/calc';
 import { fmtQty, fmtMoney, fmtDateRange } from '@/utils/format';
-import { LC_TYPES } from '@/utils/constants';
 import { FormActions } from '@/features/contracts/ContractFormPage';
 import { piSchema, piDefaults, toFormValues } from './schema';
 
@@ -169,7 +168,6 @@ export default function PIFormPage() {
             <SectionCard title="Common SPI Details" subtitle="These apply to every SPI under this PI" icon={<TuneOutlinedIcon />}>
               <FormGrid columns={4}>
                 <RHFText name="piNo" label="PI No" required />
-                <RHFText name="lcType" label="LC Type" options={LC_TYPES} required />
                 <RHFText name="spiDate" label="PI Date" type="date" required />
                 <RHFText name="spiValidity" label="PI Validity" type="date" required />
                 <RHFText name="unitPrice" label="PI Unit Price" type="number" required endAdornment={contract?.currency} />

@@ -18,7 +18,6 @@ import { EmptyState, ErrorState } from '@/components/States';
 import { useConfirm } from '@/components/ConfirmProvider';
 import { piHooks } from '@/hooks/useApi';
 import { fmtDate, fmtQty, fmtMoney } from '@/utils/format';
-import { labelOf, LC_TYPES } from '@/utils/constants';
 import Can from '@/components/Can';
 
 /** One row per sales contract (with its PI); expand to see every SPI with all its details. */
@@ -168,7 +167,6 @@ export default function PIListPage() {
                                       <TableCell align="center">SPI Qty</TableCell>
                                       <TableCell align="center">Unit Price</TableCell>
                                       <TableCell align="center">SPI Amount</TableCell>
-                                      <TableCell>LC Type</TableCell>
                                       <TableCell>SPI Date</TableCell>
                                       <TableCell>Validity</TableCell>
                                       <TableCell>Port of Loading</TableCell>
@@ -187,7 +185,6 @@ export default function PIListPage() {
                                         <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>{fmtQty(s.qty, pi.unit)}</TableCell>
                                         <TableCell align="center" sx={{ whiteSpace: 'nowrap' }}>{fmtMoney(pi.unitPrice, pi.currency)}</TableCell>
                                         <TableCell align="center" sx={{ whiteSpace: 'nowrap', fontWeight: 600 }}>{fmtMoney(s.amount, pi.currency)}</TableCell>
-                                        <TableCell>{labelOf(LC_TYPES, pi.lcType)}</TableCell>
                                         <TableCell sx={{ whiteSpace: 'nowrap' }}>{fmtDate(pi.spiDate)}</TableCell>
                                         <TableCell sx={{ whiteSpace: 'nowrap' }}>{fmtDate(pi.spiValidity)}</TableCell>
                                         <TableCell>{pi.pol}</TableCell>
