@@ -72,6 +72,53 @@ export default function VesselDetailPage() {
   );
 }
 
+/** One "label ........ value" line of the report's information sections. */
+const InfoRow = ({ label, value }) => (
+  <Box sx={{ display: 'grid', gridTemplateColumns: '42% 1fr', columnGap: 1.5, py: 0.6, borderBottom: '1px dotted', borderColor: 'divider' }}>
+    <Typography variant="body2" color="text.secondary">
+      {label}
+    </Typography>
+    <Typography variant="body2" fontWeight={650} sx={{ wordBreak: 'break-word' }}>
+      {value || '—'}
+    </Typography>
+  </Box>
+);
+
+const InfoGroup = ({ title, children }) => (
+  <Box>
+    <Typography variant="overline" color="text.secondary" display="block" sx={{ lineHeight: 1.6, mb: 0.25 }}>
+      {title}
+    </Typography>
+    {children}
+  </Box>
+);
+
+/** Seller / buyer details for the vessel; one block per distinct seller+buyer pair (a vessel can carry several contracts). */
+function PartiesInfo({ rows }) {
+  const groups = [];
+  rows.forEach((r) => {
+    const key = `${r.sellerName}|${r.buyerName}`;
+    const g = groups.find((x) => x.key === key);
+    if (g) g.contractNos.push(r.contractNo);
+    else groups.push({ key, row: r, contractNos: [r.contractNo] });
+  });
+  return (
+    <>
+      {groups.map(({ key, row, contractNos }) => (
+        <InfoGroup key={key} title={groups.length > 1 ? `Seller & Buyer · ${contractNos.join(', ')}` : 'Seller & Buyer'}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gridTemplateRows: 'repeat(2, auto)', gridAutoFlow: 'column', columnGap: 4 }}>
+            <InfoRow label="Seller Name" value={row.sellerName} />
+            <InfoRow label="Buyer Name" value={row.buyerName} />
+            <InfoRow label="Buyer IRC No" value={row.buyerIrcNo} />
+            <InfoRow label="Buyer TIN No" value={row.buyerTinNo} />
+            <InfoRow label="Buyer BIN No" value={row.buyerBinNo} />
+          </Box>
+        </InfoGroup>
+      ))}
+    </>
+  );
+}
+
 function PrintableReport({ data }) {
   const { shipment: s, rows } = data;
   const sum = (f) => sumBy(rows, f);
@@ -101,37 +148,35 @@ function PrintableReport({ data }) {
       </Stack>
 
       <Box className="avoid-break">
-        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1 }}>
+        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ pb: 1, mb: 1.5, borderBottom: 1, borderColor: 'divider' }}>
           <Typography variant="h5">{s.vesselName}</Typography>
           <StatusChip value={s.status} />
         </Stack>
-        <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 1 }}>
-          {[
-            ['Vessel Type', s.vesselType],
-            ['IMO No', s.imoNo],
-            ['Flag', s.flag],
-            ['Port of Registry', s.portOfRegistry],
-            ['Hold / Hatch', s.holdHatch || '—'],
-            ['Demurrage Rate', s.demurrageRate != null ? `${fmtMoney(s.demurrageRate, 'USD')}/day` : '—'],
-            ['ETC', fmtDate(s.etc)],
-            ['Shipping Date', fmtDate(s.spd)],
-            ['Sailing Date', fmtDate(s.sld)],
-            ['ETA / Arrival', fmtDate(s.eta)],
-            ['Contracts', rows.length],
-            ['Total Contract Qty', fmtQty(sum('contractQty'))],
-            ['Total BL Qty', fmtQty(sum('blQty'))],
-            ['Total LC Pending', fmtQty(sum('lcPendingQty'))],
-          ].map(([k, v]) => (
-            <Box key={k} sx={{ border: 1, borderColor: 'divider', borderRadius: 1.5, px: 1.25, py: 0.75 }}>
-              <Typography variant="caption" color="text.secondary" display="block">
-                {k}
-              </Typography>
-              <Typography variant="body2" fontWeight={650}>
-                {v}
-              </Typography>
-            </Box>
-          ))}
-        </Box>
+        <Stack spacing={2}>
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', columnGap: 4 }}>
+            <InfoGroup title="Vessel Particulars">
+              <InfoRow label="Vessel Type" value={s.vesselType} />
+              <InfoRow label="IMO No" value={s.imoNo} />
+              <InfoRow label="Flag" value={s.flag} />
+              <InfoRow label="Port of Registry" value={s.portOfRegistry} />
+              <InfoRow label="Hold / Hatch" value={s.holdHatch} />
+              <InfoRow label="Demurrage Rate" value={s.demurrageRate != null ? `${fmtMoney(s.demurrageRate, 'USD')}/day` : null} />
+            </InfoGroup>
+            <InfoGroup title="Voyage Schedule">
+              <InfoRow label="ETC" value={fmtDate(s.etc)} />
+              {/* <InfoRow label="Shipping Date" value={fmtDate(s.spd)} /> */}
+              <InfoRow label="Sailing Date" value={fmtDate(s.sld)} />
+              <InfoRow label="ETA / Arrival" value={fmtDate(s.eta)} />
+            </InfoGroup>
+            <InfoGroup title="Cargo Summary">
+              <InfoRow label="Contracts" value={String(rows.length)} />
+              <InfoRow label="Total Contract Qty" value={fmtQty(sum('contractQty'))} />
+              <InfoRow label="Total BL Qty" value={fmtQty(sum('blQty'))} />
+              <InfoRow label="Total LC Pending" value={fmtQty(sum('lcPendingQty'))} />
+            </InfoGroup>
+          </Box>
+          <PartiesInfo rows={rows} />
+        </Stack>
       </Box>
 
       <Box className="avoid-break">

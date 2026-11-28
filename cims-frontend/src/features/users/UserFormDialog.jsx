@@ -64,9 +64,9 @@ export default function UserFormDialog({ user, onClose }) {
                 label="Role"
                 required
                 options={[
-                  { value: ROLES.SYSTEM_ADMIN, label: 'System Administrator: full control, creates Admins and Users' },
-                  { value: ROLES.ADMIN, label: 'Admin: access set by the System Administrator' },
-                  { value: ROLES.USER, label: 'User: access set by the System Administrator' },
+                  { value: ROLES.SYSTEM_ADMIN, label: 'System Administrator' },
+                  { value: ROLES.ADMIN, label: 'Admin' },
+                  { value: ROLES.USER, label: 'User' },
                 ]}
               />
               {methods.watch('role') !== ROLES.SYSTEM_ADMIN && (

@@ -1,5 +1,18 @@
 import { repos, delay, ApiError } from './core';
+import { readJSON } from '../storage';
 import { sumBy, calcLcPending, latestLcValue } from '@/utils/calc';
+
+/** Buyer (with IRC/TIN/BIN from the Settings buyer master) and seller of a contract. */
+function partyInfo(c) {
+  const buyer = (readJSON('lookups', {}).buyers || []).find((b) => (b.name || '').trim().toLowerCase() === (c.buyer || '').trim().toLowerCase());
+  return {
+    buyerName: c.buyer ?? null,
+    buyerIrcNo: buyer?.ircNo || null,
+    buyerTinNo: buyer?.tinNo || null,
+    buyerBinNo: buyer?.binNo || null,
+    sellerName: c.seller ?? null,
+  };
+}
 
 /**
  * Joins Shipment × Contract × PI × LC into vessel-wise report rows
@@ -47,6 +60,7 @@ function buildContractRow(shipment, sc) {
     vesselStatus: shipment.status,
     contractNo: c.contractNo,
     createdByName: c.createdByName ?? null,
+    ...partyInfo(c),
     commodity: c.commodity,
     origin: c.origin,
     unit: c.unit,
@@ -90,6 +104,7 @@ function buildUnassignedRow(c) {
     vesselStatus: null,
     contractNo: c.contractNo,
     createdByName: c.createdByName ?? null,
+    ...partyInfo(c),
     commodity: c.commodity,
     origin: c.origin,
     unit: c.unit,

@@ -20,7 +20,7 @@ import QtySummaryBar from '@/components/QtySummaryBar';
 import { FormSkeleton, ErrorState, EmptyState } from '@/components/States';
 import { useConfirm } from '@/components/ConfirmProvider';
 import { useSnackbar } from 'notistack';
-import { contractHooks, piHooks, useLookups, useSettings, useUpdateLookups } from '@/hooks/useApi';
+import { contractHooks, piHooks, useLookups, useUpdateLookups } from '@/hooks/useApi';
 import { useSubmit } from '@/hooks/useSubmit';
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges';
 import { checkSpiTotal, calcSpiAmount, sumBy, toNum, round2 } from '@/utils/calc';
@@ -38,7 +38,6 @@ export default function PIFormPage() {
 
   const { data: contracts = [], isLoading: loadingContracts } = contractHooks.useList();
   const { data: lookups } = useLookups();
-  const { data: settings } = useSettings();
   const updateLookups = useUpdateLookups();
   const { enqueueSnackbar } = useSnackbar();
   const existing = piHooks.useOne(id);
@@ -58,7 +57,6 @@ export default function PIFormPage() {
   };
   const create = piHooks.useCreate();
   const update = piHooks.useUpdate();
-  const tolerance = settings?.spiTolerancePct ?? 0;
 
   const methods = useForm({
     resolver: zodResolver(piSchema),
@@ -76,6 +74,8 @@ export default function PIFormPage() {
 
   const [contractId, unitPrice, spis, piNo] = useWatch({ control, name: ['contractId', 'unitPrice', 'spis', 'piNo'] });
   const contract = contracts.find((c) => c.id === contractId);
+  // SPI total tolerance is defined on the sales contract.
+  const tolerance = toNum(contract?.tolerance);
 
   // Pre-fill unit price from the contract for a new PI.
   useEffect(() => {

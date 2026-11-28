@@ -17,6 +17,11 @@ export const reportColumns = [
   { field: 'vesselName', headerName: 'Vessel Name', pinned: 'left', minWidth: 170, valueFormatter: (p) => (p.data?.__total ? p.value : p.value || 'Not Assigned') },
   { field: 'contractNo', headerName: 'Contract No', minWidth: 160 },
   { field: 'createdByName', headerName: 'Created By', minWidth: 160, valueFormatter: (p) => (p.data?.__total ? '' : p.value || '—') },
+  { field: 'buyerName', headerName: 'Buyer Name', minWidth: 180, valueFormatter: (p) => (p.data?.__total ? '' : p.value || '—') },
+  { field: 'buyerIrcNo', headerName: 'Buyer IRC No', minWidth: 140, valueFormatter: (p) => (p.data?.__total ? '' : p.value || '—') },
+  { field: 'buyerTinNo', headerName: 'Buyer TIN No', minWidth: 140, valueFormatter: (p) => (p.data?.__total ? '' : p.value || '—') },
+  { field: 'buyerBinNo', headerName: 'Buyer BIN No', minWidth: 140, valueFormatter: (p) => (p.data?.__total ? '' : p.value || '—') },
+  { field: 'sellerName', headerName: 'Seller Name', minWidth: 180, valueFormatter: (p) => (p.data?.__total ? '' : p.value || '—') },
   { field: 'commodity', headerName: 'Commodity Name', minWidth: 180 },
   { field: 'vesselStatus', headerName: 'Vessel Status', minWidth: 150, cellRenderer: (p) => (p.data?.__total ? '' : <StatusChip value={p.value} />) },
   {
@@ -27,7 +32,7 @@ export const reportColumns = [
   },
   dateCol('eta', 'ETA / Arrival', { valueFormatter: (p) => (p.data?.__total ? '' : p.value ? fmtDate(p.value) : 'Not Assigned') }),
   dateCol('etc', 'ETC', { valueFormatter: (p) => (p.data?.__total ? '' : p.value ? fmtDate(p.value) : 'Not Assigned') }),
-  dateCol('spd', 'Shipping Date', { valueFormatter: (p) => (p.data?.__total ? '' : p.value ? fmtDate(p.value) : 'Not Assigned') }),
+  // dateCol('spd', 'Shipping Date', { valueFormatter: (p) => (p.data?.__total ? '' : p.value ? fmtDate(p.value) : 'Not Assigned') }),
   dateCol('sld', 'Sailing Date', { valueFormatter: (p) => (p.data?.__total ? '' : p.value ? fmtDate(p.value) : 'Not Assigned') }),
   {
     field: 'lcNos',

@@ -39,7 +39,13 @@ export default function ContractFormPage() {
     if (existing.data) reset(toFormValues(existing.data));
   }, [existing.data, reset]);
 
-  const [qty, price, currency, packaging] = useWatch({ control, name: ['totalQty', 'unitPrice', 'currency', 'packaging'] });
+  const [qty, price, currency, packaging, buyer] = useWatch({ control, name: ['totalQty', 'unitPrice', 'currency', 'packaging', 'buyer'] });
+  const selectedBuyer = (lookups?.buyers ?? []).find((b) => b.name === buyer);
+  // Keep a contract's existing buyer selectable even if it isn't in the Settings buyer list.
+  const buyerOptions = (() => {
+    const names = (lookups?.buyers ?? []).map((b) => b.name);
+    return buyer && !names.includes(buyer) ? [buyer, ...names] : names;
+  })();
   const totalPrice = calcTotalPrice(qty, price);
 
   const onSubmit = methods.handleSubmit((values) =>
@@ -75,7 +81,16 @@ export default function ContractFormPage() {
                 <RHFText name="contractNo" label="Contract No" required />
                 <RHFText name="date" label="Contract Date" type="date" required />
                 <RHFText name="status" label="Status" options={CONTRACT_STATUS} required />
-                <RHFText name="buyer" label="Buyer Name" required />
+                <RHFAutocomplete
+                  name="buyer"
+                  label="Buyer Name"
+                  options={buyerOptions}
+                  required
+                  helperText={buyerOptions.length === 0 ? 'No buyers yet — add them in Settings' : undefined}
+                />
+                <ReadOnlyField label="IRC No" value={selectedBuyer?.ircNo || '—'} />
+                <ReadOnlyField label="TIN No" value={selectedBuyer?.tinNo || '—'} />
+                <ReadOnlyField label="BIN No" value={selectedBuyer?.binNo || '—'} />
                 <RHFText name="seller" label="Seller Name" required />
                 <RHFText name="tolerance" label="Tolerance (%)" type="number" />
                 <RHFAutocomplete name="incoterms" label="Incoterms" options={lookups?.incoterms ?? []} required />

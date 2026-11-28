@@ -30,6 +30,8 @@ export const DEFAULT_LOOKUPS = {
   ],
   vesselTypes: ['Bulk Carrier', 'Handysize', 'Supramax', 'Ultramax', 'Panamax', 'Kamsarmax', 'Container Ship', 'General Cargo'],
   vesselStatuses: ['Not Start Yet', 'On Loading', 'Loading Complete', 'Sailed', 'Arrived', 'Discharging', 'Discharged'],
+  /** Buyer master: [{ id, name, ircNo, tinNo, binNo }] */
+  buyers: [],
 };
 
 export const DEFAULT_SETTINGS = { spiTolerancePct: 0 };

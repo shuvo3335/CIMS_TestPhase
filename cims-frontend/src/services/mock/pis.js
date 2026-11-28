@@ -1,6 +1,5 @@
 import { repos, delay, ApiError, eqi, assertCan } from './core';
 import { uid } from '../storage';
-import { settings } from './lookups';
 import { calcSpiAmount, checkSpiTotal, toNum, sumBy } from '@/utils/calc';
 import { fmtQty } from '@/utils/format';
 
@@ -46,7 +45,8 @@ function validate(data, existingId) {
   if (new Set(nos).size !== nos.length) throw new ApiError('SPI numbers must be unique within the PI');
   if (spis.some((s) => toNum(s.qty) <= 0)) throw new ApiError('Every SPI quantity must be greater than zero');
 
-  const { spiTolerancePct } = settings.getSync();
+  // Tolerance comes from the sales contract.
+  const spiTolerancePct = toNum(contract.tolerance);
   const chk = checkSpiTotal(spis, contract.totalQty, spiTolerancePct);
   if (!chk.ok) {
     throw new ApiError(
